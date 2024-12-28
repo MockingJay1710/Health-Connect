@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 
 import '../../UserModel.dart';
 
+
 class login extends StatefulWidget {
   const login({super.key});
 
@@ -38,6 +39,7 @@ class _LoginState extends State<login> {
           password: _passwordController.text.trim(),
         );
         Provider.of<UserModel>(context, listen: false).setEmail(_emailController.text.trim());
+
 
         // Navigate to Homepage on success
         Navigator.pushReplacement(

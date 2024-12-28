@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:medical/Screens/Views/Homepage.dart';
 import 'package:medical/Screens/Views/doctor_details_screen.dart';
 import 'package:medical/Screens/Widgets/doctorList.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
-
 class DoctorSearch extends StatelessWidget {
   const DoctorSearch({super.key});
 
@@ -47,6 +47,7 @@ class DoctorSearch extends StatelessWidget {
     },
   ];
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,21 +56,25 @@ class DoctorSearch extends StatelessWidget {
         leading: GestureDetector(
           onTap: () {
             Navigator.pushReplacement(
+
               context,
               PageTransition(
                 type: PageTransitionType.leftToRight, // Smooth transition to the homepage
                 child: Homepage(), // Replace with your actual homepage widget
               ),
             );
+
           },
           child: Container(
             height: 10,
             width: 10,
             decoration: const BoxDecoration(
+
               image: DecorationImage(
                 image: AssetImage("lib/icons/back1.png"),
               ),
             ),
+
           ),
         ),
         title: Text(
@@ -113,6 +118,7 @@ class DoctorSearch extends StatelessWidget {
           ),
         ),
       ),
+
     );
   }
 }

@@ -158,6 +158,7 @@ class _TabBarExampleState extends State<forgot_pass>
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF6D27E6),
+
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),

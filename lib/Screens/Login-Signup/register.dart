@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../UserModel.dart';
 
+
 class register extends StatefulWidget {
   const register({super.key});
 
@@ -69,6 +70,7 @@ class _RegisterState extends State<register> {
     }
   }
 
+
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       if (_isChecked) {
@@ -107,6 +109,7 @@ class _RegisterState extends State<register> {
             context,
             PageTransition(type: PageTransitionType.fade, child: Homepage()),
           );
+
         } on FirebaseAuthException catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(e.message ?? "Registration failed")),
@@ -120,7 +123,6 @@ class _RegisterState extends State<register> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,6 +135,7 @@ class _RegisterState extends State<register> {
           },
         ),
         title: Text('Register'),
+
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -215,6 +218,7 @@ class _RegisterState extends State<register> {
                 validator: (value) {
                   if (value == null) {
                     return 'Please select a role';
+
                   }
                   return null;
                 },
@@ -288,6 +292,7 @@ class _RegisterState extends State<register> {
                 ),
               ],
             ),
+
           ),
         ),
       ),

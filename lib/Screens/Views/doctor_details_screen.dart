@@ -23,6 +23,7 @@ class DoctorDetails extends StatelessWidget {
     required this.image,
   }) : super(key: key);
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,5 +198,6 @@ class DoctorDetails extends StatelessWidget {
         ),
       ),
     );
+
   }
 }

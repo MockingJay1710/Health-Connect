@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medical/Screens/Views/Homepage.dart';
 import 'package:medical/Screens/Views/shedule_tab1.dart';
+
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class shedule_screen extends StatefulWidget {
@@ -14,6 +15,7 @@ class shedule_screen extends StatefulWidget {
 class _TabBarExampleState extends State<shedule_screen> with SingleTickerProviderStateMixin {
   late TabController tabController;
   List<Map<String, String>> appointments = [];
+
 
   @override
   void initState() {
@@ -142,6 +144,7 @@ class _TabBarExampleState extends State<shedule_screen> with SingleTickerProvide
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,6 +162,7 @@ class _TabBarExampleState extends State<shedule_screen> with SingleTickerProvide
         ),
         title: Text("Top Doctors",
             style: GoogleFonts.poppins(color: Colors.black, fontSize: 18.sp)),
+
         centerTitle: false,
         elevation: 0,
         toolbarHeight: 100,
@@ -171,6 +175,7 @@ class _TabBarExampleState extends State<shedule_screen> with SingleTickerProvide
               decoration: const BoxDecoration(
                 image: DecorationImage(image: AssetImage("lib/icons/bell.png")),
               ),
+
             ),
           ),
         ],

@@ -1,8 +1,19 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medical/Screens/Views/chat_screen.dart';
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:medical/Screens/Views/chat_screen.dart';
+import 'package:medical/Screens/Views/shedule_tab1.dart';
+import 'package:medical/Screens/Views/shedule_tab2.dart';
+import 'package:medical/Screens/Widgets/TabbarPages/tab1.dart';
+import 'package:medical/Screens/Widgets/TabbarPages/tab2.dart';
+import 'package:medical/Screens/Login-Signup/login.dart';
+
 import 'package:medical/Screens/Widgets/message_all_widget.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -38,6 +49,7 @@ class TabBarExampleState extends State<message_tab_all> {
       'message_count': "3",
     },
   ];
+
 
   @override
   void initState() {
@@ -117,6 +129,7 @@ class TabBarExampleState extends State<message_tab_all> {
     setState(() {
       doctors.add(doctor); // Add the doctor to the list permanently
     });
+
   }
 
   @override
@@ -130,10 +143,13 @@ class TabBarExampleState extends State<message_tab_all> {
           style: GoogleFonts.poppins(color: Colors.black, fontSize: 18.sp),
         ),
         centerTitle: true,
+
+
         elevation: 0,
         toolbarHeight: 100,
         backgroundColor: Colors.white,
         actions: [
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: GestureDetector(
@@ -144,11 +160,13 @@ class TabBarExampleState extends State<message_tab_all> {
                 "lib/icons/bell.png",
                 height: 24,
                 width: 24,
+
               ),
             ),
           ),
         ],
       ),
+
       body: ListView.builder(
         itemCount: doctors.length,
         itemBuilder: (context, index) {
@@ -156,14 +174,17 @@ class TabBarExampleState extends State<message_tab_all> {
           return GestureDetector(
             onTap: () {
               // Navigate to chat screen with image and name
+
               Navigator.push(
                 context,
                 PageTransition(
                   type: PageTransitionType.bottomToTop,
+
                   child: chat_screen(
                     image: doctor['image']!,
                     name: doctor['name']!,
                   ),
+
                 ),
               );
             },
@@ -180,3 +201,4 @@ class TabBarExampleState extends State<message_tab_all> {
     );
   }
 }
+

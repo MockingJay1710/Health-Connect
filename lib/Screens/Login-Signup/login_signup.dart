@@ -113,7 +113,9 @@ class login_signup extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 18.sp,
+
                 color: Color.fromARGB(255, 164, 65, 186),
+
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0,
               ),

@@ -50,6 +50,7 @@ class _chat_screenState extends State<chat_screen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -147,11 +148,14 @@ class _chat_screenState extends State<chat_screen> {
                 IconButton(
                   icon: Icon(Icons.send),
                   onPressed: sendMessage,
+
                 ),
               ],
             ),
           ),
         ],
+
+
       ),
     );
   }

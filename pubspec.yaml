@@ -12,8 +12,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-
-
   cupertino_icons: ^1.0.2
   google_fonts: ^5.1.0
   font_awesome_flutter: ^10.5.0
@@ -32,6 +30,7 @@ dependencies:
 
 
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -40,6 +39,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
   assets:
     - images/logo.png
     - images/logo-green.png
@@ -54,6 +54,7 @@ flutter:
     - images/capsules2.png
     - lib/icons/
     - lib/icons/camera.png
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -71,6 +71,7 @@ class Dashboard extends StatelessWidget {
                       PageTransition(
                           type: PageTransitionType.rightToLeft,
                           child: FindDoctor()));
+
                 },
                 textAlign: TextAlign.start,
                 textInputAction: TextInputAction.none,
@@ -148,7 +149,9 @@ class Dashboard extends StatelessWidget {
                         context,
                         PageTransition(
                             type: PageTransitionType.rightToLeft,
+
                             child: DoctorSearch()));
+
                   },
                   child: Text(
                     "See all",

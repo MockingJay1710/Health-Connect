@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:medical/Screens/Views/doctor_details_screen.dart';
 import 'package:medical/Screens/Widgets/doctorList.dart';
 import 'package:medical/Screens/Widgets/listicons.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+
 
 class FindDoctor extends StatefulWidget {
   const FindDoctor({super.key});
@@ -32,6 +34,7 @@ class _FindDoctorState extends State<FindDoctor> {
       return matchesName && matchesCategory;
     }).toList();
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -69,18 +72,20 @@ class _FindDoctorState extends State<FindDoctor> {
           SizedBox(
             height: 20,
           ),
-          // Search bar
+
           Center(
             child: Container(
               height: MediaQuery.of(context).size.height * 0.06,
               width: MediaQuery.of(context).size.width * 0.9,
               decoration: BoxDecoration(),
               child: TextField(
+
                 controller: _searchController,
                 textAlign: TextAlign.start,
                 textInputAction: TextInputAction.none,
                 obscureText: false,
                 keyboardType: TextInputType.text,
+
                 textAlignVertical: TextAlignVertical.center,
                 decoration: InputDecoration(
                   focusColor: Colors.black26,
@@ -101,22 +106,25 @@ class _FindDoctorState extends State<FindDoctor> {
                   ),
                   prefixIconColor: const Color.fromARGB(255, 158, 83, 220),
                   label: Text("Search for a doctor..."),
+
                   floatingLabelBehavior: FloatingLabelBehavior.never,
                   border: OutlineInputBorder(
                     borderSide: BorderSide.none,
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
+
                 onChanged: (value) {
                   setState(() {});
                 },
+
               ),
             ),
           ),
           SizedBox(
             height: 20,
           ),
-          // Category Selector
+
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -124,6 +132,7 @@ class _FindDoctorState extends State<FindDoctor> {
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: Text(
                   "Categories",
+
                   style: GoogleFonts.inter(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
@@ -159,6 +168,7 @@ class _FindDoctorState extends State<FindDoctor> {
           ),
           SizedBox(height: 20),
           // Filtered Doctors List
+
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -178,6 +188,7 @@ class _FindDoctorState extends State<FindDoctor> {
           const SizedBox(
             height: 5,
           ),
+
           Column(
             children: getFilteredDoctors().map((doctor) {
               return GestureDetector(
@@ -198,6 +209,7 @@ class _FindDoctorState extends State<FindDoctor> {
                 ),
               );
             }).toList(),
+
           ),
         ]),
       ),

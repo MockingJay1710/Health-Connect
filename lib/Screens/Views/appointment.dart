@@ -39,6 +39,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +50,9 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
             Navigator.pushReplacement(
                 context,
                 PageTransition(
+
                     type: PageTransitionType.fade, child:  DoctorDetails(doctorName: '', specialty: '',distance: '', rating: '', image: '',)));
+
           },
           child: Container(
             height: 10,
@@ -58,6 +61,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                 image: DecorationImage(
                   image: AssetImage("lib/icons/back1.png"),
                 )),
+
           ),
         ),
         title: Text(
@@ -67,6 +71,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
         centerTitle: true,
         elevation: 0,
         toolbarHeight: 100,
+
         backgroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -260,6 +265,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                   ],
                 ),
               ],
+
             ],
           ),
         ]),
