@@ -1,8 +1,11 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medical/Screens/Views/chat_screen.dart';
+
+
 import 'package:medical/Screens/Widgets/message_all_widget.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
@@ -11,10 +14,10 @@ class message_tab_all extends StatefulWidget {
   const message_tab_all({Key? key}) : super(key: key);
 
   @override
-  _MessageTabAllState createState() => _MessageTabAllState();
+  TabBarExampleState createState() => TabBarExampleState();
 }
 
-class _MessageTabAllState extends State<message_tab_all> {
+class TabBarExampleState extends State<message_tab_all> {
   List<Map<String, String>> doctors = [
     {
       'image': "lib/icons/male-doctor.png",
@@ -39,12 +42,14 @@ class _MessageTabAllState extends State<message_tab_all> {
     },
   ];
 
+
   @override
   void initState() {
     super.initState();
     fetchContactedDoctors();
   }
 
+  // Fetch contacted doctors for the logged-in user
   // Fetch contacted doctors for the logged-in user
   Future<void> fetchContactedDoctors() async {
     try {
@@ -76,46 +81,30 @@ class _MessageTabAllState extends State<message_tab_all> {
           .get();
 
       // Convert the fetched doctors into a list of maps
-      final List<Map<String, String>> fetchedDoctors = await Future.wait(doctorsSnapshot.docs.map((doc) async {
+      final List<Map<String, String>> fetchedDoctors = doctorsSnapshot.docs.map((doc) {
         final data = doc.data();
 
-        // Replace null fields with default values
-        String doctorImage = data['image']?.toString() ?? 'lib/icons/default-doctor.png'; // Default image
-        String doctorName = data['name']?.toString() ?? 'Unknown Doctor'; // Default name
-        String doctorMessage = data['message']?.toString() ?? 'Start chatting'; // Default message
-        String doctorEmail = data['email']?.toString() ?? ''; // Default email if not available
-
-        // Fetch doctor's email using the doctor ID from the 'users' collection
-        final QuerySnapshot<Map<String, dynamic>> doctorSnapshot = await FirebaseFirestore.instance
-            .collection('users')
-            .where('name', isEqualTo: doctorName) // Query by name first
-            .get();
-
-        if (doctorSnapshot.docs.isNotEmpty) {
-          doctorEmail = doctorSnapshot.docs.first['email'] ?? ''; // Grab email if available
-        }
-
+        // Safely cast fields to String and handle missing fields
         return {
-          'image': doctorImage,
-          'name': doctorName,
-          'message': doctorMessage,
-          'time': formatTimestamp(data['contactedAt']), // Format timestamp
+          'image': data['image']?.toString() ?? '',
+          'name': data['name']?.toString() ?? '',
+          'message': "Start chatting", // Placeholder message
+          'time': formatTimestamp(data['contactedAt']), // Convert Timestamp to readable format
           'message_count': "0", // Placeholder for message count
-          'email': "doctorEmail", // Add email
         };
-      }).toList());
+      }).toList();
 
+      // Update the state to include fetched doctors
       setState(() {
-        doctors.addAll(fetchedDoctors); // Add the fetched doctors to the list
+        doctors.addAll(fetchedDoctors); // Add the fetched doctors to the existing list
       });
     } catch (e) {
       print("Error fetching contacted doctors: $e");
+      // Handle the error appropriately
     }
   }
 
-
-
-  // Helper function to format Firestore Timestamp to readable time
+// Helper function to format Firestore Timestamp to readable time
   String formatTimestamp(dynamic timestamp) {
     if (timestamp is Timestamp) {
       final DateTime dateTime = timestamp.toDate();
@@ -124,10 +113,15 @@ class _MessageTabAllState extends State<message_tab_all> {
     return "Now"; // Default time if timestamp is null or invalid
   }
 
+
+
+
+
   void addDoctor(Map<String, String> doctor) {
     setState(() {
       doctors.add(doctor); // Add the doctor to the list permanently
     });
+
   }
 
   @override
@@ -141,25 +135,29 @@ class _MessageTabAllState extends State<message_tab_all> {
           style: GoogleFonts.poppins(color: Colors.black, fontSize: 18.sp),
         ),
         centerTitle: true,
+
+
         elevation: 0,
         toolbarHeight: 100,
         backgroundColor: Colors.white,
         actions: [
+
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: GestureDetector(
               onTap: () {
-                // Add functionality if needed
               },
               child: Image.asset(
                 "lib/icons/bell.png",
                 height: 24,
                 width: 24,
+
               ),
             ),
           ),
         ],
       ),
+
       body: ListView.builder(
         itemCount: doctors.length,
         itemBuilder: (context, index) {
@@ -167,35 +165,27 @@ class _MessageTabAllState extends State<message_tab_all> {
           return GestureDetector(
             onTap: () {
               // Navigate to chat screen with image and name
-              if (doctor['image'] != null && doctor['name'] != null ) {
-                Navigator.push(
-                  context,
-                  PageTransition(
-                    type: PageTransitionType.bottomToTop,
-                    child: chat_screen(
-                      image: doctor['image']!,
-                      name: doctor['name']!,
-                      receiverEmail: "emaildoctor",
-                    ),
-                  ),
-                );
-              } else {
-                print('Doctor data is missing');
-                print("image");
-                print(doctor['image'] );
-                print("name");
-                print(doctor['name'] );
-                print("email");
-                print(doctor['email'] );
 
-              }
+              Navigator.push(
+                context,
+                PageTransition(
+                  type: PageTransitionType.bottomToTop,
+
+                  child: chat_screen(
+                    image: doctor['image']!,
+                    name: doctor['name']!,
+                    receiverEmail: doctor['name']!,
+                  ),
+
+                ),
+              );
             },
             child: message_all_widget(
-              image: doctor['image'] ?? '',
-              Maintext: doctor['name'] ?? 'Unknown',
-              subtext: doctor['message'] ?? 'No message',
-              time: doctor['time'] ?? 'Now',
-              message_count: doctor['message_count'] ?? '0',
+              image: doctor['image']!,
+              Maintext: doctor['name']!,
+              subtext: doctor['message']!,
+              time: doctor['time']!,
+              message_count: doctor['message_count']!,
             ),
           );
         },
@@ -203,3 +193,4 @@ class _MessageTabAllState extends State<message_tab_all> {
     );
   }
 }
+

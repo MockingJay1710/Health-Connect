@@ -10,24 +10,24 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 class Profile_screen extends StatelessWidget {
   const Profile_screen({super.key});
 
-  Future<Map<String, dynamic>> getUserData() async {
-    String? userEmail = FirebaseAuth.instance.currentUser?.email;
+    Future<Map<String, dynamic>> getUserData() async {
+      String? userEmail = FirebaseAuth.instance.currentUser?.email;
 
-    if (userEmail != null) {
-      var userQuerySnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('email', isEqualTo: userEmail)
-          .get();
+      if (userEmail != null) {
+        var userQuerySnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: userEmail)
+            .get();
 
-      if (userQuerySnapshot.docs.isNotEmpty) {
-        return userQuerySnapshot.docs.first.data();
+        if (userQuerySnapshot.docs.isNotEmpty) {
+          return userQuerySnapshot.docs.first.data();
+        } else {
+          throw Exception('User not found');
+        }
       } else {
-        throw Exception('User not found');
+        throw Exception('No user logged in');
       }
-    } else {
-      throw Exception('No user logged in');
     }
-  }
 
 
   @override

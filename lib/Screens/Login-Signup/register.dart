@@ -3,12 +3,10 @@ import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:medical/Screens/Login-Signup/login.dart';
+import 'package:medical/Screens/Views/HomeDoctor.dart';
 import 'package:medical/Screens/Views/Homepage.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
-import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -104,11 +102,20 @@ class _RegisterState extends State<register> {
           // Set email in UserModel globally
           Provider.of<UserModel>(context, listen: false).setEmail(_emailController.text.trim());
 
-          // Navigate to Homepage on success
-          Navigator.pushReplacement(
-            context,
-            PageTransition(type: PageTransitionType.fade, child: Homepage()),
-          );
+          // Navigate based on role
+          if (_selectedRole == 'Doctor') {
+            // Navigate to Doctor Dashboard
+            Navigator.pushReplacement(
+              context,
+              PageTransition(type: PageTransitionType.fade, child: HomeDoctor()),
+            );
+          } else {
+            // Navigate to HomePage (Patient)
+            Navigator.pushReplacement(
+              context,
+              PageTransition(type: PageTransitionType.fade, child: Homepage()),
+            );
+          }
 
         } on FirebaseAuthException catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -122,6 +129,7 @@ class _RegisterState extends State<register> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
