@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -57,9 +59,14 @@ class Profile_screen extends StatelessWidget {
           String dateNaissance = userData['dateNaissance'] ?? 'Unknown';
 
           // Use default avatar if no profile image is available
-          String profileImage = profileImageBase64.isEmpty
-              ? 'lib/icons/avatar.png'
-              : profileImageBase64;
+          ImageProvider profileImageProvider;
+          if (profileImageBase64.isEmpty) {
+            profileImageProvider = AssetImage('lib/icons/avatar.png');  // Default avatar
+          } else {
+            // Decode the base64 string into bytes
+            Uint8List decodedBytes = base64Decode(profileImageBase64);
+            profileImageProvider = MemoryImage(decodedBytes);  // Display decoded image
+          }
 
           return SingleChildScrollView(
             child: Column(
@@ -82,7 +89,7 @@ class Profile_screen extends StatelessWidget {
                           ],
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: AssetImage(profileImage),
+                            image: profileImageProvider,
                             fit: BoxFit.cover,
                           ),
                         ),

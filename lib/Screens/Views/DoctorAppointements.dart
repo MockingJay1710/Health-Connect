@@ -68,7 +68,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
           },
         ),
         title: Text(
-          "My Appointments",
+          "Your Appointements Demands",
           style: GoogleFonts.poppins(color: Colors.black, fontSize: 18.sp),
         ),
         centerTitle: false,
@@ -96,7 +96,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
                   ),
                   controller: tabController,
                   tabs: const [
-                    Tab(text: "Upcoming"),
+                    Tab(text: "Pending"),
                     Tab(text: "Completed"),
                     Tab(text: "Cancelled"),
                   ],
@@ -124,7 +124,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('appointments')
-          .where('userEmail', isEqualTo: userEmail)  // Query by user email
+          .where('email', isEqualTo: userEmail)  // Query by user email
           .where('status', isEqualTo: status)  // Filter by status
           .snapshots(),
       builder: (context, snapshot) {
