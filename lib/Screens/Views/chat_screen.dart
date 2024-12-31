@@ -3,11 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
+
 class chat_screen extends StatefulWidget {
   final String image;
   final String name;
+  final String receiverEmail;  // Add receiver email
 
-  chat_screen({required this.image, required this.name});
+  chat_screen({
+    required this.image,
+    required this.name,
+    required this.receiverEmail,  // Pass receiver's email
+  });
 
   @override
   _chat_screenState createState() => _chat_screenState();
@@ -26,9 +32,9 @@ class _chat_screenState extends State<chat_screen> {
     chatId = generateChatId();
   }
 
-  // Generate a unique chat ID based on user and doctor names
+  // Generate a unique chat ID based on user email and doctor name
   String generateChatId() {
-    return currentUser!.uid + "_" + widget.name.replaceAll(' ', '_');
+    return currentUser!.email!.replaceAll('.', '_') + "_" + widget.receiverEmail.replaceAll(' ', '_');
   }
 
   // Send message to Firestore
@@ -36,20 +42,22 @@ class _chat_screenState extends State<chat_screen> {
     if (messageController.text.isNotEmpty) {
       final message = {
         "sender": currentUser?.email ?? "Unknown",
+        "receiver": widget.receiverEmail,  // Include the receiver's email
         "message": messageController.text,
         "timestamp": FieldValue.serverTimestamp(),
       };
 
+      // Add the message to Firestore
       await _firestore
           .collection('chats')
           .doc(chatId)
           .collection('messages')
           .add(message);
 
+      // Clear the input field
       messageController.clear();
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -84,12 +92,13 @@ class _chat_screenState extends State<chat_screen> {
                   .collection('chats')
                   .doc(chatId)
                   .collection('messages')
-                  .orderBy('timestamp', descending: false)
-                  .snapshots(),
+                  .orderBy('timestamp', descending: false) // Order messages by timestamp
+                  .snapshots(), // Real-time updates
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 }
+
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return Center(child: Text("No messages yet."));
                 }
@@ -148,14 +157,11 @@ class _chat_screenState extends State<chat_screen> {
                 IconButton(
                   icon: Icon(Icons.send),
                   onPressed: sendMessage,
-
                 ),
               ],
             ),
           ),
         ],
-
-
       ),
     );
   }

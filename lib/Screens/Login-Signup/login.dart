@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medical/Screens/Login-Signup/forgot_pass.dart';
 import 'package:medical/Screens/Login-Signup/login_signup.dart';
 import 'package:medical/Screens/Login-Signup/register.dart';
+import 'package:medical/Screens/Views/HomeDoctor.dart';
 import 'package:medical/Screens/Views/Homepage.dart';
 import 'package:medical/Screens/Widgets/auth_social_login.dart';
 
@@ -34,18 +36,51 @@ class _LoginState extends State<login> {
   void validateAndLogin() async {
     if (_formKey.currentState!.validate()) {
       try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        // Sign in with email and password
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
-        Provider.of<UserModel>(context, listen: false).setEmail(_emailController.text.trim());
 
+        // Get the email entered by the user
+        String email = _emailController.text.trim();
 
-        // Navigate to Homepage on success
-        Navigator.pushReplacement(
-          context,
-          PageTransition(type: PageTransitionType.fade, child: Homepage()),
-        );
+        // Query Firestore to find the user document where the email matches
+        QuerySnapshot userQuerySnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .limit(1)  // Limit to 1 document, as email should be unique
+            .get();
+
+        if (userQuerySnapshot.docs.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("User not found")),
+          );
+          return;
+        }
+
+        // Get the first document (should be only one)
+        DocumentSnapshot userDoc = userQuerySnapshot.docs.first;
+
+        // Check the user's role
+        String role = userDoc['role'];  // Assuming 'role' is a field in the user document
+
+        // Navigate based on role
+        if (role == 'Patient') {
+          Navigator.pushReplacement(
+            context,
+            PageTransition(type: PageTransitionType.fade, child: Homepage()),
+          );
+        } else if (role == 'Doctor') {
+          Navigator.pushReplacement(
+            context,
+            PageTransition(type: PageTransitionType.fade, child: HomeDoctor()),
+          );
+        }
+
+        // Store email in Provider
+        Provider.of<UserModel>(context, listen: false).setEmail(email);
+
       } on FirebaseAuthException catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message ?? "Login failed")),
@@ -53,6 +88,8 @@ class _LoginState extends State<login> {
       }
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

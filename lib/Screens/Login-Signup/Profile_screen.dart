@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,24 +12,24 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 class Profile_screen extends StatelessWidget {
   const Profile_screen({super.key});
 
-  Future<Map<String, dynamic>> getUserData() async {
-    String? userEmail = FirebaseAuth.instance.currentUser?.email;
+    Future<Map<String, dynamic>> getUserData() async {
+      String? userEmail = FirebaseAuth.instance.currentUser?.email;
 
-    if (userEmail != null) {
-      var userQuerySnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('email', isEqualTo: userEmail)
-          .get();
+      if (userEmail != null) {
+        var userQuerySnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: userEmail)
+            .get();
 
-      if (userQuerySnapshot.docs.isNotEmpty) {
-        return userQuerySnapshot.docs.first.data();
+        if (userQuerySnapshot.docs.isNotEmpty) {
+          return userQuerySnapshot.docs.first.data();
+        } else {
+          throw Exception('User not found');
+        }
       } else {
-        throw Exception('User not found');
+        throw Exception('No user logged in');
       }
-    } else {
-      throw Exception('No user logged in');
     }
-  }
 
 
   @override
@@ -57,9 +59,14 @@ class Profile_screen extends StatelessWidget {
           String dateNaissance = userData['dateNaissance'] ?? 'Unknown';
 
           // Use default avatar if no profile image is available
-          String profileImage = profileImageBase64.isEmpty
-              ? 'lib/icons/avatar.png'
-              : profileImageBase64;
+          ImageProvider profileImageProvider;
+          if (profileImageBase64.isEmpty) {
+            profileImageProvider = AssetImage('lib/icons/avatar.png');  // Default avatar
+          } else {
+            // Decode the base64 string into bytes
+            Uint8List decodedBytes = base64Decode(profileImageBase64);
+            profileImageProvider = MemoryImage(decodedBytes);  // Display decoded image
+          }
 
           return SingleChildScrollView(
             child: Column(
@@ -82,7 +89,7 @@ class Profile_screen extends StatelessWidget {
                           ],
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: AssetImage(profileImage),
+                            image: profileImageProvider,
                             fit: BoxFit.cover,
                           ),
                         ),

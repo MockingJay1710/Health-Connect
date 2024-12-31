@@ -164,7 +164,8 @@ class DoctorDetails extends StatelessWidget {
                           type: PageTransitionType.bottomToTop,
                           child: chat_screen(
                             image: image,
-                            name: doctorName,
+                            name: doctorName, receiverEmail: '',
+
                           ),
                         ),
                       );
