@@ -7,7 +7,7 @@ import 'package:medical/Screens/Widgets/article.dart';
 import 'package:medical/Screens/Widgets/banner.dart';
 import 'package:medical/Screens/Widgets/doctorList.dart';
 import 'package:medical/Screens/Widgets/list_doctor1.dart';
-import 'package:medical/Screens/Widgets/listicons.dart';
+import 'package:medical/Screens/Widgets/listIcons.dart';
 import 'package:medical/Screens/Views/articlePage.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
