@@ -34,9 +34,13 @@ class _RegisterState extends State<register> {
   bool _isChecked = false; // Checkbox state
   String? _selectedRole; // Role selection
   final List<String> _roles = ['Doctor', 'Patient'];
+
+  //doctor specialities
+  List<String> _specialities = ['Generalist', 'Cardiology', 'Pediatrics', 'Neurology'];
+  String? _selectedSpeciality;
   File? _selectedImage; // For mobile/desktop (non-web)
   XFile? _selectedImageWeb;
-  PhoneNumber _phoneNumber = PhoneNumber(isoCode: 'US');  // Default country code
+  PhoneNumber _phoneNumber = PhoneNumber(isoCode: 'US'); // Default country code
 
   // Function to handle country code and phone number formatting
   Future<void> _onPhoneNumberChanged(PhoneNumber number) async {
@@ -96,7 +100,8 @@ class _RegisterState extends State<register> {
 
     if (pickedDate != null) {
       setState(() {
-        _dateNaissanceController.text = pickedDate.toLocal().toString().split(' ')[0];
+        _dateNaissanceController.text =
+        pickedDate.toLocal().toString().split(' ')[0];
       });
     }
   }
@@ -112,7 +117,8 @@ class _RegisterState extends State<register> {
         }
 
         try {
-          UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          UserCredential userCredential = await FirebaseAuth.instance
+              .createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
@@ -132,12 +138,14 @@ class _RegisterState extends State<register> {
             'created_at': FieldValue.serverTimestamp(),
           });
 
-          Provider.of<UserModel>(context, listen: false).setEmail(_emailController.text.trim());
+          Provider.of<UserModel>(context, listen: false).setEmail(
+              _emailController.text.trim());
 
           if (_selectedRole == 'Doctor') {
             Navigator.pushReplacement(
               context,
-              PageTransition(type: PageTransitionType.fade, child: HomeDoctor()),
+              PageTransition(
+                  type: PageTransitionType.fade, child: HomeDoctor()),
             );
           } else {
             Navigator.pushReplacement(
@@ -188,11 +196,11 @@ class _RegisterState extends State<register> {
                       radius: 50,
                       backgroundColor: Colors.grey[300],
                       backgroundImage: _selectedImage != null
-                          ? FileImage(_selectedImage!) // Only use FileImage if _selectedImage is valid
+                          ? FileImage(_selectedImage!)
                           : null,
                       child: _selectedImage == null
                           ? Image.asset(
-                        "lib/icons/camera.png", // Default icon when no image is selected
+                        "lib/icons/camera.png",
                         width: 40,
                         height: 40,
                       )
@@ -205,10 +213,16 @@ class _RegisterState extends State<register> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: "Enter your email"),
+                  decoration: const InputDecoration(
+                      labelText: "Enter your email"),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
+                    }
+                    final emailRegex = RegExp(
+                        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                    if (!emailRegex.hasMatch(value)) {
+                      return 'Please enter a valid email';
                     }
                     return null;
                   },
@@ -217,7 +231,8 @@ class _RegisterState extends State<register> {
                 // Name Field
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: "Enter your name"),
+                  decoration: const InputDecoration(
+                      labelText: "Enter your name"),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your name';
@@ -234,7 +249,8 @@ class _RegisterState extends State<register> {
                     labelText: "Select a role",
                     suffixIcon: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Image.asset("lib/icons/down-arrow.png", width: 20, height: 20),
+                      child: Image.asset("lib/icons/down-arrow.png",
+                          width: 20, height: 20),
                     ),
                     border: const OutlineInputBorder(),
                   ),
@@ -248,15 +264,47 @@ class _RegisterState extends State<register> {
                   onChanged: (String? newValue) {
                     setState(() {
                       _selectedRole = newValue;
+                      _selectedSpeciality =
+                      null; // Reset speciality when role changes
                     });
                   },
                 ),
+                if (_selectedRole == 'Doctor') ...[
+                  const SizedBox(height: 15),
+                  // Specialities Dropdown
+                  DropdownButtonFormField<String>(
+                    value: _selectedSpeciality,
+                    isDense: true,
+                    decoration: InputDecoration(
+                      labelText: "Select a speciality",
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Image.asset("lib/icons/down-arrow.png",
+                            width: 20, height: 20),
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                    icon: const SizedBox.shrink(),
+                    items: _specialities.map((String speciality) {
+                      return DropdownMenuItem<String>(
+                        value: speciality,
+                        child: Text(speciality),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedSpeciality = newValue;
+                      });
+                    },
+                  ),
+                ],
                 const SizedBox(height: 15),
                 // Password Field
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: "Enter your password"),
+                  decoration: const InputDecoration(
+                      labelText: "Enter your password"),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
@@ -272,7 +320,8 @@ class _RegisterState extends State<register> {
                     selectorType: PhoneInputSelectorType.DIALOG,
                   ),
                   initialValue: _phoneNumber,
-                  inputDecoration: const InputDecoration(labelText: 'Phone Number'),
+                  inputDecoration: const InputDecoration(
+                      labelText: 'Phone Number'),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your phone number';
@@ -293,6 +342,27 @@ class _RegisterState extends State<register> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your birthdate';
+                    }
+                    final DateTime? birthdate = DateTime.tryParse(value);
+                    if (birthdate == null) {
+                      return 'Invalid birthdate';
+                    }
+                    int age = DateTime
+                        .now()
+                        .year - birthdate.year;
+                    if (DateTime
+                        .now()
+                        .month < birthdate.month ||
+                        (DateTime
+                            .now()
+                            .month == birthdate.month &&
+                            DateTime
+                                .now()
+                                .day < birthdate.day)) {
+                      age--;
+                    }
+                    if (_selectedRole == 'Doctor' && age < 25) {
+                      return 'Doctors must be at least 25 years old';
                     }
                     return null;
                   },
@@ -326,3 +396,4 @@ class _RegisterState extends State<register> {
     );
   }
 }
+
