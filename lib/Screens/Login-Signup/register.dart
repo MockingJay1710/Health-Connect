@@ -11,8 +11,11 @@ import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 import '../../UserModel.dart';
+
+const ip='http://10.72.101.137:8080';
 
 class register extends StatefulWidget {
   const register({super.key});
@@ -40,7 +43,8 @@ class _RegisterState extends State<register> {
   String? _selectedSpeciality;
   File? _selectedImage; // For mobile/desktop (non-web)
   XFile? _selectedImageWeb;
-  PhoneNumber _phoneNumber = PhoneNumber(isoCode: 'US'); // Default country code
+  PhoneNumber _phoneNumber = PhoneNumber(isoCode: 'US');
+
 
   // Function to handle country code and phone number formatting
   Future<void> _onPhoneNumberChanged(PhoneNumber number) async {
@@ -141,21 +145,58 @@ class _RegisterState extends State<register> {
           Provider.of<UserModel>(context, listen: false).setEmail(
               _emailController.text.trim());
 
-          if (_selectedRole == 'Doctor') {
-            Navigator.pushReplacement(
-              context,
-              PageTransition(
-                  type: PageTransitionType.fade, child: HomeDoctor()),
+          Map<String, dynamic> userData = {
+            'name': _nameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'phone_number': phoneNumberFormatted,
+            'user_type': _selectedRole == 'Doctor' ? 'DOCTOR' : 'PATIENT', // Enum type in Java
+            'dateNaissance': _dateNaissanceController.text.trim(), // Format: yyyy-MM-dd
+          };
+          // Define backend URL
+          String url = _selectedRole == 'Doctor'
+
+              ? ip+'/api/doctors/save'
+              : ip+'/api/patients/save';
+
+          // Send user data to the backend
+          var response = await http.post(
+            Uri.parse(url),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(userData),
+          );
+
+          if (response.statusCode == 200) {
+            Provider.of<UserModel>(context, listen: false).setEmail(_emailController.text.trim());
+
+            if (_selectedRole == 'Doctor') {
+              Navigator.pushReplacement(
+                context,
+                PageTransition(type: PageTransitionType.fade, child: HomeDoctor()),
+              );
+            } else {
+              Navigator.pushReplacement(
+                context,
+                PageTransition(type: PageTransitionType.fade, child: Homepage()),
+              );
+            }
+          } else if (response.statusCode == 409) {
+            // 409 Conflict: User already registered
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('User is already registered.')),
             );
           } else {
-            Navigator.pushReplacement(
-              context,
-              PageTransition(type: PageTransitionType.fade, child: Homepage()),
+            // Handle other errors
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to register user: ${response.body}')),
             );
           }
         } on FirebaseAuthException catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(e.message ?? "Registration failed")),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
           );
         }
       } else {
@@ -165,7 +206,6 @@ class _RegisterState extends State<register> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
