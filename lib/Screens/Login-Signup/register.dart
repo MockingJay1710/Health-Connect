@@ -36,7 +36,7 @@ class _RegisterState extends State<register> {
   final List<String> _roles = ['Doctor', 'Patient'];
 
   //doctor specialities
-  List<String> _specialities = ['Generalist', 'Cardiology', 'Pediatrics', 'Neurology'];
+  List<String> _specialities = ['Generaliste', 'Cardiologie', 'Pediatrie', 'Neurologie', 'Psychiatrie'];
   String? _selectedSpeciality;
   File? _selectedImage; // For mobile/desktop (non-web)
   XFile? _selectedImageWeb;

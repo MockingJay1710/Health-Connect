@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert'; // For JSON parsing
 
 import 'package:medical/Screens/Views/doctor_details_screen.dart';
 import 'package:medical/Screens/Widgets/doctorList.dart';
-import 'package:medical/Screens/Widgets/listIcons.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
-
 
 class FindDoctor extends StatefulWidget {
   const FindDoctor({super.key});
@@ -18,15 +18,47 @@ class FindDoctor extends StatefulWidget {
 class _FindDoctorState extends State<FindDoctor> {
   TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
-  List<String> categories = ['All', 'General', 'Lungs Prob', 'Psychiatrist', 'Cardiologist'];
-  List<Map<String, String>> doctors = [
-    {"name": "Dr. Marcus Horizon", "category": "Cardiologist", "distance": "800m away", "image": "lib/icons/male-doctor.png", "rating": "4.7"},
-    {"name": "Dr. Maria Smith", "category": "Psychiatrist", "distance": "500m away", "image": "lib/icons/female-doctor.png", "rating": "4.5"},
-    {"name": "Dr. Luke Johnson", "category": "General", "distance": "1km away", "image": "lib/icons/black-doctor.png", "rating": "4.6"},
-    // Add more doctor data here
-  ];
+  List<String> categories = ['All', 'Generaliste', 'Cardiologie', 'Pediatrie', 'Neurologie', 'Psychiatrie'];
+  List<Map<String, dynamic>> doctors = [];
+  bool isLoading = true;
+  String? errorMessage;
 
-  List<Map<String, String>> getFilteredDoctors() {
+  @override
+  void initState() {
+    super.initState();
+    fetchDoctors();
+  }
+
+  Future<void> fetchDoctors() async {
+    try {
+      final response = await http.get(Uri.parse('http://10.72.101.133:8080/api/doctors/allDoctors'));
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = json.decode(response.body);
+        setState(() {
+          doctors = data.map((item) {
+            return {
+              "name": item["name"],                      // Map 'name' from API response
+              "category": item["specialiteDocteur"],      // Map 'specialiteDocteur' to 'category'
+              "distance": "3.0",                          // Hardcode distance for now
+              "image": "lib/icons/male-doctor.png", // Hardcode image URL
+              "rating": "4.5",                            // Hardcode rating
+            };
+          }).toList();
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to load doctors');
+      }
+    } catch (error) {
+      setState(() {
+        errorMessage = error.toString();
+        isLoading = false;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> getFilteredDoctors() {
     String query = _searchController.text.toLowerCase();
     return doctors.where((doctor) {
       bool matchesName = doctor["name"]!.toLowerCase().contains(query);
@@ -34,7 +66,6 @@ class _FindDoctorState extends State<FindDoctor> {
       return matchesName && matchesCategory;
     }).toList();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -67,64 +98,42 @@ class _FindDoctorState extends State<FindDoctor> {
         centerTitle: true,
       ),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : errorMessage != null
+          ? Center(child: Text("Error: $errorMessage"))
+          : SingleChildScrollView(
         child: Column(children: [
-          SizedBox(
-            height: 20,
-          ),
-
+          SizedBox(height: 20),
           Center(
             child: Container(
               height: MediaQuery.of(context).size.height * 0.06,
               width: MediaQuery.of(context).size.width * 0.9,
-              decoration: BoxDecoration(),
               child: TextField(
-
                 controller: _searchController,
-                textAlign: TextAlign.start,
-                textInputAction: TextInputAction.none,
-                obscureText: false,
-                keyboardType: TextInputType.text,
-
-                textAlignVertical: TextAlignVertical.center,
                 decoration: InputDecoration(
-                  focusColor: Colors.black26,
                   fillColor: Color.fromARGB(255, 247, 247, 247),
                   filled: true,
                   prefixIcon: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                    ),
-                    child: Container(
-                      height: MediaQuery.of(context).size.height * 0.01,
-                      width: MediaQuery.of(context).size.width * 0.01,
-                      child: Image.asset(
-                        "lib/icons/search.png",
-                        filterQuality: FilterQuality.high,
-                      ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Image.asset(
+                      "lib/icons/search.png",
+                      filterQuality: FilterQuality.high,
                     ),
                   ),
-                  prefixIconColor: const Color.fromARGB(255, 158, 83, 220),
-                  label: Text("Search for a doctor..."),
-
-                  floatingLabelBehavior: FloatingLabelBehavior.never,
+                  labelText: "Search for a doctor...",
                   border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
                     borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
                   ),
                 ),
-
                 onChanged: (value) {
                   setState(() {});
                 },
-
               ),
             ),
           ),
-          SizedBox(
-            height: 20,
-          ),
-
+          SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -132,7 +141,6 @@ class _FindDoctorState extends State<FindDoctor> {
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: Text(
                   "Categories",
-
                   style: GoogleFonts.inter(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
@@ -142,10 +150,7 @@ class _FindDoctorState extends State<FindDoctor> {
               ),
             ],
           ),
-          const SizedBox(
-            height: 10,
-          ),
-          // Category Buttons
+          SizedBox(height: 10),
           Row(
             children: categories.map((category) {
               return Padding(
@@ -157,9 +162,7 @@ class _FindDoctorState extends State<FindDoctor> {
                     });
                   },
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: _selectedCategory == category
-                        ? Colors.blue
-                        : Colors.grey[300],
+                    foregroundColor: _selectedCategory == category ? Colors.blue : Colors.grey[300],
                   ),
                   child: Text(category),
                 ),
@@ -167,8 +170,6 @@ class _FindDoctorState extends State<FindDoctor> {
             }).toList(),
           ),
           SizedBox(height: 20),
-          // Filtered Doctors List
-
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -185,10 +186,7 @@ class _FindDoctorState extends State<FindDoctor> {
               ),
             ],
           ),
-          const SizedBox(
-            height: 5,
-          ),
-
+          SizedBox(height: 5),
           Column(
             children: getFilteredDoctors().map((doctor) {
               return GestureDetector(
@@ -196,8 +194,15 @@ class _FindDoctorState extends State<FindDoctor> {
                   Navigator.push(
                     context,
                     PageTransition(
-                        type: PageTransitionType.rightToLeft,
-                        child: DoctorDetails(doctorName: "", specialty: "", rating: "", distance: "", image: "")),
+                      type: PageTransitionType.rightToLeft,
+                      child: DoctorDetails(
+                        doctorName: doctor["name"]!,
+                        specialty: doctor["category"]!,
+                        rating: doctor["rating"]!,
+                        distance: doctor["distance"]!,
+                        image: doctor["image"]!,
+                      ),
+                    ),
                   );
                 },
                 child: doctorList(
@@ -209,7 +214,6 @@ class _FindDoctorState extends State<FindDoctor> {
                 ),
               );
             }).toList(),
-
           ),
         ]),
       ),
