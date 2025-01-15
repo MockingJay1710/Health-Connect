@@ -40,9 +40,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-<<<<<<< HEAD
+/android/gradle.properties
 
 .flutter-plugins
 .flutter-plugins-dependencies
-=======
->>>>>>> f66d0fe0b2498a0d7bdb8ae92c699ee28e70b42a
+
