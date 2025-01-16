@@ -51,7 +51,7 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
                 context,
                 PageTransition(
 
-                    type: PageTransitionType.fade, child:  DoctorDetails(doctorName: '', specialty: '',distance: '', rating: '', image: '',)));
+                    type: PageTransitionType.fade, child:  DoctorDetails(doctorName: '', specialty: '',distance: '', rating: '', image: '', docEmail: '',)));
 
           },
           child: Container(
