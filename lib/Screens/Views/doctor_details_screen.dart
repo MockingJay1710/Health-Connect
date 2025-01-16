@@ -13,6 +13,7 @@ class DoctorDetails extends StatelessWidget {
   final String rating;
   final String distance;
   final String image;
+  final String docEmail;
 
   const DoctorDetails({
     Key? key,
@@ -21,8 +22,111 @@ class DoctorDetails extends StatelessWidget {
     required this.rating,
     required this.distance,
     required this.image,
+    required this.docEmail,
   }) : super(key: key);
 
+  Future<void> _addAppointment(BuildContext context) async {
+    final TextEditingController dateController = TextEditingController();
+    final TextEditingController timeController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Add Appointment"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  DateTime? pickedDate = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime(2101),
+                  );
+                  if (pickedDate != null) {
+                    dateController.text =
+                        pickedDate.toString().substring(0, 10);
+                  }
+                },
+                child: AbsorbPointer(
+                  child: TextField(
+                    controller: dateController,
+                    decoration: const InputDecoration(labelText: 'Select Date'),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () async {
+                  TimeOfDay? pickedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                  );
+                  if (pickedTime != null) {
+                    timeController.text = pickedTime.format(context);
+                  }
+                },
+                child: AbsorbPointer(
+                  child: TextField(
+                    controller: timeController,
+                    decoration: const InputDecoration(labelText: 'Select Time'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                try {
+                  final User? currentUser =
+                      FirebaseAuth.instance.currentUser;
+                  if (currentUser == null) {
+                    throw Exception("User not logged in");
+                  }
+                  final String userEmail = currentUser.email ?? "";
+
+                  final appointmentData = {
+                    'userEmail': userEmail,
+                    'doctor': doctorName,
+                    'speciality': specialty,
+                    'date': dateController.text,
+                    'time': timeController.text,
+                    'status': 'Pending',
+                  };
+
+                  await FirebaseFirestore.instance
+                      .collection('appointments')
+                      .add(appointmentData);
+                  print(docEmail);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Appointment added successfully."),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Error: ${e.toString()}"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text("Add Appointment"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,88 +221,49 @@ class DoctorDetails extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             Center(
-              child: ElevatedButton(
-                  onPressed: () async {
-                    try {
-                      // Get the current user's email
-                      final User? currentUser = FirebaseAuth.instance.currentUser;
-                      if (currentUser == null) {
-                        throw Exception("User not logged in");
-                      }
-                      final String userEmail = currentUser.email ?? "";
-
-                      // Query Firestore to find the user document by email
-                      final QuerySnapshot<Map<String, dynamic>> userSnapshot = await FirebaseFirestore.instance
-                          .collection('users')
-                          .where('email', isEqualTo: userEmail)
-                          .get();
-
-                      if (userSnapshot.docs.isEmpty) {
-                        throw Exception("No user found with email: $userEmail");
-                      }
-
-                      // Get the user's document ID
-                      final String userId = userSnapshot.docs.first.id;
-
-                      // Create doctor object
-                      Map<String, dynamic> selectedDoctor = {
-                        'image': image,
-                        'name': doctorName,
-                        'specialty': specialty,
-                        'rating': rating,
-                        'distance': distance,
-                        'contactedAt': Timestamp.now(), // Store timestamp for when they were contacted
-                      };
-
-                      // Add the doctor to Firestore under the user's `contactedDoctors` subcollection
-                      await FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(userId)
-                          .collection('contactedDoctors')
-                          .add(selectedDoctor);
-
-                      // Navigate to the chat screen
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Start chat logic
                       Navigator.push(
                         context,
                         PageTransition(
                           type: PageTransitionType.bottomToTop,
                           child: chat_screen(
                             image: image,
-                            name: doctorName, receiverEmail: '',
-
+                            name: doctorName,
+                            receiverEmail: '', // Adjust as necessary
                           ),
                         ),
                       );
-                    } catch (e) {
-                      // Handle errors gracefully
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Error: ${e.toString()}"),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    }
-                  },
-
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: Text(
+                      "Start Chat",
+                      style: GoogleFonts.poppins(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
-                child: Text(
-                  "Start Chat",
-                  style: GoogleFonts.poppins(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(width: 10),
+                  IconButton(
+                    icon: Icon(Icons.add, color: Colors.blue, size: 30),
+                    onPressed: () => _addAppointment(context),
                   ),
-                ),
+                ],
               ),
             ),
           ],
         ),
       ),
     );
-
   }
 }
