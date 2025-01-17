@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,7 +9,7 @@ import '../../global.dart';
 import 'package:intl/intl.dart';
 
 
-class shedule_tab1 extends StatefulWidget {
+class shedule_tab1 extends StatefulWidget{
 
   final String status;
 
@@ -127,8 +126,8 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
             TextButton(
               onPressed: () async {
                 try {
-                  final DateFormat inputFormat = DateFormat("h:mm a"); // For input like "2:30 PM"
-                  final DateFormat outputFormat = DateFormat("HH:mm"); // Converts to "14:30"
+                  final DateFormat inputFormat = DateFormat("h:mm a");
+                  final DateFormat outputFormat = DateFormat("HH:mm");
                   final String formattedTime =
                   outputFormat.format(inputFormat.parse(timeController.text));
                   final response = await http.put(
@@ -136,7 +135,7 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
                         '/api/consultation/reschedule/${dateController.text}/${formattedTime}/$appointmentId'));
                   if (response.statusCode == 200) {
                     Navigator.pop(context);
-                    setState(() {}); // Refresh UI after rescheduling
+                    setState(() {});
                   } else {
                     throw Exception("Failed to reschedule: ${response.body}");
                   }
@@ -238,7 +237,7 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
                               child: const Text('Cancel'),
                             ),
                           const SizedBox(width: 10),
-                          if (appointment['status'] != 'Cancelled')
+                          if (appointment['status'] == 'Pending')
                             ElevatedButton(
                               onPressed: () => _rescheduleAppointment(appointment['id']),
                               style: ElevatedButton.styleFrom(
