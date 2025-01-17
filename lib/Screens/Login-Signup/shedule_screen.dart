@@ -265,11 +265,11 @@ class _TabBarExampleState extends State<shedule_screen> with SingleTickerProvide
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      /*floatingActionButton: FloatingActionButton(
         onPressed: _showAppointmentDialog,
         child: Icon(Icons.add, color: Colors.white),
         backgroundColor: Color.fromARGB(255, 177, 124, 241),
-      ),
+      ),*/
     );
   }
 }
