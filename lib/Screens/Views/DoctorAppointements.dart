@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'package:medical/Screens/Views/Doctor_schedule.dart';
+
 import 'package:medical/global.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'dart:convert';
@@ -28,6 +31,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
   }
 
   // Function to fetch appointments from the API
+
   Future<List<dynamic>> _fetchAppointments() async {
     try {
       // Get the current user's email
@@ -104,10 +108,11 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
           Expanded(
             child: TabBarView(
               controller: tabController,
-              children: [
-                _buildAppointmentsList('PENDING'),
-                _buildAppointmentsList('COMPLETED'),
-                _buildAppointmentsList('CANCELLED'),
+
+              children: const[
+                DoctorSchedule(status:'Pending'),
+                DoctorSchedule(status:'Completed'),
+                DoctorSchedule(status:'Canceled'),
               ],
             ),
           ),
@@ -116,72 +121,8 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
     );
   }
 
-  Widget _buildAppointmentsList(String status) {
-    return FutureBuilder<List<dynamic>>(
-      future: _fetchAppointments(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
 
-        if (snapshot.hasError) {
-          return Center(child: Text("Error: ${snapshot.error}"));
-        }
 
-        var appointments = snapshot.data ?? [];
-
-        return appointments.isEmpty
-            ? Center(
-          child: Text(
-            "No appointments available.",
-            style: GoogleFonts.poppins(fontSize: 16.sp, color: Colors.grey),
-          ),
-        )
-            : ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          itemCount: appointments.length,
-          itemBuilder: (context, i) {
-            var appointment = appointments[i];
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Patient: ${appointment['patientService']['name']}",
-                      style: GoogleFonts.poppins(fontSize: 16.sp),
-                    ),
-                    Text(
-                      "Email: ${appointment['patientService']['email']}",
-                      style: GoogleFonts.poppins(fontSize: 14.sp),
-                    ),
-                    Text(
-                      "Date: ${appointment['date']}",
-                      style: GoogleFonts.poppins(fontSize: 14.sp),
-                    ),
-                    Text(
-                      "Time: ${appointment['time']}",
-                      style: GoogleFonts.poppins(fontSize: 14.sp),
-                    ),
-                    Text(
-                      "Status: ${appointment['etatConsultation']}",
-                      style: GoogleFonts.poppins(fontSize: 14.sp, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 10),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
   }
+
 }
