@@ -102,6 +102,7 @@ class DoctorSearch extends StatelessWidget {
                         rating: doctor["rating"]!,
                         distance: doctor["distance"]!,
                         image: doctor["image"]!,
+                        docEmail: "",
                       ),
                     ),
                   );

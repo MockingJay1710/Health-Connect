@@ -15,7 +15,7 @@ import 'package:http/http.dart' as http;
 
 import '../../UserModel.dart';
 
-const ip='http://10.72.101.137:8080';
+const ip='http://10.72.101.154:8080';
 
 class register extends StatefulWidget {
   const register({super.key});
@@ -152,11 +152,14 @@ class _RegisterState extends State<register> {
             'user_type': _selectedRole == 'Doctor' ? 'DOCTOR' : 'PATIENT', // Enum type in Java
             'dateNaissance': _dateNaissanceController.text.trim(), // Format: yyyy-MM-dd
           };
+          if (_selectedRole == 'Doctor' && _selectedSpeciality != null) {
+            userData['specialiteDocteur'] = _selectedSpeciality;
+          }
           // Define backend URL
           String url = _selectedRole == 'Doctor'
 
-              ? ip+'/api/doctors/save'
-              : ip+'/api/patients/save';
+              ? 'http://10.72.101.154:8080/api/doctors/save'
+              : 'http://10.72.101.154:8080/api/patients/save';
 
           // Send user data to the backend
           var response = await http.post(
@@ -436,4 +439,3 @@ class _RegisterState extends State<register> {
     );
   }
 }
-

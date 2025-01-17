@@ -31,7 +31,7 @@ class _FindDoctorState extends State<FindDoctor> {
 
   Future<void> fetchDoctors() async {
     try {
-      final response = await http.get(Uri.parse('http://10.72.101.133:8080/api/doctors/allDoctors'));
+      final response = await http.get(Uri.parse('http://10.72.101.154:8080/api/doctors/allDoctors'));
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
@@ -42,7 +42,9 @@ class _FindDoctorState extends State<FindDoctor> {
               "category": item["specialiteDocteur"],      // Map 'specialiteDocteur' to 'category'
               "distance": "3.0",                          // Hardcode distance for now
               "image": "lib/icons/male-doctor.png", // Hardcode image URL
-              "rating": "4.5",                            // Hardcode rating
+              "rating": "4.5",
+              "email": item["email"],
+              // Hardcode rating
             };
           }).toList();
           isLoading = false;
@@ -80,13 +82,13 @@ class _FindDoctorState extends State<FindDoctor> {
             Navigator.of(context).pop();
           },
         ),
-        backgroundColor: Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         title: Column(
           children: [
             Text(
               "Find Doctor",
               style: GoogleFonts.inter(
-                  color: Color.fromARGB(255, 51, 47, 47),
+                  color: const Color.fromARGB(255, 51, 47, 47),
                   fontSize: 20.sp,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1),
@@ -99,12 +101,12 @@ class _FindDoctorState extends State<FindDoctor> {
       ),
       backgroundColor: Colors.white,
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : errorMessage != null
           ? Center(child: Text("Error: $errorMessage"))
           : SingleChildScrollView(
         child: Column(children: [
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Center(
             child: Container(
               height: MediaQuery.of(context).size.height * 0.06,
@@ -112,7 +114,7 @@ class _FindDoctorState extends State<FindDoctor> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  fillColor: Color.fromARGB(255, 247, 247, 247),
+                  fillColor: const Color.fromARGB(255, 247, 247, 247),
                   filled: true,
                   prefixIcon: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -133,7 +135,7 @@ class _FindDoctorState extends State<FindDoctor> {
               ),
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -144,32 +146,41 @@ class _FindDoctorState extends State<FindDoctor> {
                   style: GoogleFonts.inter(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
-                    color: Color.fromARGB(255, 46, 46, 46),
+                    color: const Color.fromARGB(255, 46, 46, 46),
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 10),
-          Row(
-            children: categories.map((category) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedCategory = category;
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: _selectedCategory == category ? Colors.blue : Colors.grey[300],
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 50,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedCategory = category;
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _selectedCategory == category
+                          ? Colors.blue
+                          : Colors.grey[300],
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(category),
                   ),
-                  child: Text(category),
-                ),
-              );
-            }).toList(),
+                );
+              },
+            ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -180,13 +191,13 @@ class _FindDoctorState extends State<FindDoctor> {
                   style: GoogleFonts.inter(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w700,
-                    color: Color.fromARGB(255, 46, 46, 46),
+                    color: const Color.fromARGB(255, 46, 46, 46),
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Column(
             children: getFilteredDoctors().map((doctor) {
               return GestureDetector(
@@ -201,6 +212,7 @@ class _FindDoctorState extends State<FindDoctor> {
                         rating: doctor["rating"]!,
                         distance: doctor["distance"]!,
                         image: doctor["image"]!,
+                        docEmail: doctor["email"]!,
                       ),
                     ),
                   );

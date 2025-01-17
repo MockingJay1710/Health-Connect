@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import 'package:http/http.dart' as http;
 
 class shedule_tab1 extends StatefulWidget {
 
@@ -16,25 +19,59 @@ class shedule_tab1 extends StatefulWidget {
 }
 
 class _ScheduleTab1State extends State<shedule_tab1 > {
-  late FirebaseAuth _auth;
-  late FirebaseFirestore _firestore;
-  late String userEmail;
 
+  late String userEmail;
   @override
   void initState() {
     super.initState();
-    _auth = FirebaseAuth.instance;
-    _firestore = FirebaseFirestore.instance;
-    userEmail = _auth.currentUser?.email ?? ''; // Get current user email
+    userEmail = FirebaseAuth.instance.currentUser?.email ?? ''; // Get current user email
   }
 
-  void _cancelAppointment(DocumentSnapshot appointment) {
-    _firestore.collection('appointments').doc(appointment.id).update({
-      'status': 'Cancelled',
-    });
+  Future<List<Map<String, dynamic>>> fetchAppointments() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.72.101.154:8080/api/consultation/consultations/patient/$userEmail'),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((item) {
+          return {
+            'id': item['id'],
+            'doctorName': item['docteurService']['name'],
+            'specialty': item['docteurService']['specialiteDocteur'],
+            'date': item['date'],
+            'time': item['time'],
+            'status': item['etatConsultation'],
+          };
+        }).toList();
+      } else {
+        throw Exception("Failed to fetch appointments: ${response.body}");
+      }
+    } catch (e) {
+      throw Exception("Error fetching appointments: $e");
+    }
   }
 
-  void _rescheduleAppointment(DocumentSnapshot appointment) {
+  Future<void> _cancelAppointment(int appointmentId) async {
+    try {
+      final response = await http.put(
+        Uri.parse('http://10.72.101.154:8080/api/consultation/cancel/$appointmentId'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {}); // Refresh UI after cancellation
+      } else {
+        throw Exception("Failed to cancel appointment: ${response.body}");
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error canceling appointment: $e")),
+      );
+    }
+  }
+
+  Future<void> _rescheduleAppointment(int appointmentId) async {
     final TextEditingController dateController = TextEditingController();
     final TextEditingController timeController = TextEditingController();
 
@@ -46,7 +83,6 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Reschedule for: ${appointment['doctor']}"),
               GestureDetector(
                 onTap: () async {
                   DateTime? pickedDate = await showDatePicker(
@@ -56,10 +92,7 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
                     lastDate: DateTime(2101),
                   );
                   if (pickedDate != null) {
-                    setState(() {
-                      dateController.text =
-                          pickedDate.toString().substring(0, 10);
-                    });
+                    dateController.text = pickedDate.toString().substring(0, 10);
                   }
                 },
                 child: AbsorbPointer(
@@ -76,9 +109,7 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
                     initialTime: TimeOfDay.now(),
                   );
                   if (pickedTime != null) {
-                    setState(() {
-                      timeController.text = pickedTime.format(context);
-                    });
+                    timeController.text = pickedTime.format(context);
                   }
                 },
                 child: AbsorbPointer(
@@ -92,15 +123,28 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                _firestore.collection('appointments')
-                    .doc(appointment.id)
-                    .update({
-                  'date': dateController.text,
-                  'time': timeController.text,
-                  'status': 'Pending', // Reset status to "Pending"
-                });
-                Navigator.pop(context);
+              onPressed: () async {
+                try {
+                  final response = await http.put(
+                    Uri.parse('http://10.72.101.154:8080/api/consultation/reschedule/$appointmentId'),
+                    body: jsonEncode({
+                      'date': dateController.text,
+                      'time': timeController.text,
+                    }),
+                    headers: {'Content-Type': 'application/json'},
+                  );
+
+                  if (response.statusCode == 200) {
+                    Navigator.pop(context);
+                    setState(() {}); // Refresh UI after rescheduling
+                  } else {
+                    throw Exception("Failed to reschedule: ${response.body}");
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Error rescheduling: $e")),
+                  );
+                }
               },
               child: const Text("Save Changes"),
             ),
@@ -120,23 +164,23 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore
-            .collection('appointments')
-            .where('userEmail', isEqualTo: userEmail) // Query by user email
-            .where(
-            'status', isEqualTo: widget.status) // Filter by passed status
-            .snapshots(),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: fetchAppointments(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
+            return Center(
+              child: Text(
+                "Error: ${snapshot.error}",
+                style: GoogleFonts.poppins(fontSize: 16.sp, color: Colors.red),
+              ),
+            );
           }
 
-          var appointments = snapshot.data?.docs ?? [];
+          var appointments = snapshot.data ?? [];
 
           return appointments.isEmpty
               ? Center(
@@ -163,11 +207,11 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Doctor: ${appointment['doctor']}",
+                        "Doctor: ${appointment['doctorName']}",
                         style: GoogleFonts.poppins(fontSize: 16.sp),
                       ),
                       Text(
-                        "Speciality: ${appointment['speciality']}",
+                        "Specialty: ${appointment['specialty']}",
                         style: GoogleFonts.poppins(fontSize: 14.sp),
                       ),
                       Text(
@@ -180,15 +224,14 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
                       ),
                       Text(
                         "Status: ${appointment['status']}",
-                        style: GoogleFonts.poppins(
-                            fontSize: 14.sp, color: Colors.grey),
+                        style: GoogleFonts.poppins(fontSize: 14.sp, color: Colors.grey),
                       ),
                       const SizedBox(height: 10),
                       Row(
                         children: [
                           if (appointment['status'] == 'Pending')
                             ElevatedButton(
-                              onPressed: () => _cancelAppointment(appointment),
+                              onPressed: () => _cancelAppointment(appointment['id']),
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.red,
                               ),
@@ -197,8 +240,7 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
                           const SizedBox(width: 10),
                           if (appointment['status'] != 'Cancelled')
                             ElevatedButton(
-                              onPressed: () =>
-                                  _rescheduleAppointment(appointment),
+                              onPressed: () => _rescheduleAppointment(appointment['id']),
                               style: ElevatedButton.styleFrom(
                                 foregroundColor: Colors.blue,
                               ),
