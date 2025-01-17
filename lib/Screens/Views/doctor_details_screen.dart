@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
   import 'package:medical/Screens/Views/chat_screen.dart';
   import 'package:medical/Screens/Widgets/TabbarPages/message_tab_all.dart';
+import 'package:medical/global.dart';
   import 'package:page_transition/page_transition.dart';
   import 'package:responsive_sizer/responsive_sizer.dart';
   import 'package:http/http.dart' as http;
@@ -114,7 +115,7 @@ import 'package:intl/intl.dart';
 
                     // Making POST request
                     final response = await http.post(
-                      Uri.parse('http://10.72.101.154:8080/api/consultation/create'),
+                      Uri.parse(backend+'/api/consultation/create'),
                       headers: {"Content-Type": "application/json"},
                       body: jsonEncode(appointmentData),
                     );

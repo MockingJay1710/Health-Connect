@@ -14,8 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 
 import '../../UserModel.dart';
-
-const ip='http://10.72.101.154:8080';
+import "../../global.dart";
 
 class register extends StatefulWidget {
   const register({super.key});
@@ -158,8 +157,8 @@ class _RegisterState extends State<register> {
           // Define backend URL
           String url = _selectedRole == 'Doctor'
 
-              ? 'http://10.72.101.154:8080/api/doctors/save'
-              : 'http://10.72.101.154:8080/api/patients/save';
+              ? backend+'/api/doctors/save'
+              : backend+'/api/patients/save';
 
           // Send user data to the backend
           var response = await http.post(

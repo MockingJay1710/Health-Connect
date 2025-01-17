@@ -6,10 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:http/http.dart' as http;
+import '../../global.dart';
+import 'package:intl/intl.dart';
+
 
 class shedule_tab1 extends StatefulWidget {
 
-  final String status; // Add a status parameter
+  final String status;
 
   const shedule_tab1({Key? key, required this.status}) : super(key: key);
 
@@ -30,9 +33,8 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
   Future<List<Map<String, dynamic>>> fetchAppointments() async {
     try {
       final response = await http.get(
-        Uri.parse('http://10.72.101.154:8080/api/consultation/consultations/patient/$userEmail'),
+        Uri.parse(backend+'/api/consultation/consultations/patient/$userEmail/${widget.status}'),
       );
-
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         return data.map((item) {
@@ -55,8 +57,8 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
 
   Future<void> _cancelAppointment(int appointmentId) async {
     try {
-      final response = await http.put(
-        Uri.parse('http://10.72.101.154:8080/api/consultation/cancel/$appointmentId'),
+      final response = await http.patch(
+        Uri.parse(backend+'/api/consultation/cancel/$appointmentId'),
       );
 
       if (response.statusCode == 200) {
@@ -125,15 +127,13 @@ class _ScheduleTab1State extends State<shedule_tab1 > {
             TextButton(
               onPressed: () async {
                 try {
+                  final DateFormat inputFormat = DateFormat("h:mm a"); // For input like "2:30 PM"
+                  final DateFormat outputFormat = DateFormat("HH:mm"); // Converts to "14:30"
+                  final String formattedTime =
+                  outputFormat.format(inputFormat.parse(timeController.text));
                   final response = await http.put(
-                    Uri.parse('http://10.72.101.154:8080/api/consultation/reschedule/$appointmentId'),
-                    body: jsonEncode({
-                      'date': dateController.text,
-                      'time': timeController.text,
-                    }),
-                    headers: {'Content-Type': 'application/json'},
-                  );
-
+                    Uri.parse(backend+
+                        '/api/consultation/reschedule/${dateController.text}/${formattedTime}/$appointmentId'));
                   if (response.statusCode == 200) {
                     Navigator.pop(context);
                     setState(() {}); // Refresh UI after rescheduling

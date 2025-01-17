@@ -5,6 +5,7 @@ import 'dart:convert'; // For JSON parsing
 
 import 'package:medical/Screens/Views/doctor_details_screen.dart';
 import 'package:medical/Screens/Widgets/doctorList.dart';
+import 'package:medical/global.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
@@ -31,7 +32,7 @@ class _FindDoctorState extends State<FindDoctor> {
 
   Future<void> fetchDoctors() async {
     try {
-      final response = await http.get(Uri.parse('http://10.72.101.154:8080/api/doctors/allDoctors'));
+      final response = await http.get(Uri.parse(backend+'/api/doctors/allDoctors'));
 
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);

@@ -246,7 +246,7 @@ class _TabBarExampleState extends State<shedule_screen> with SingleTickerProvide
                   tabs: const [
                     Tab(text: "Upcoming"),
                     Tab(text: "Completed"),
-                    Tab(text: "Cancelled"),
+                    Tab(text: "Canceled"),
                   ],
                 ),
               ),
@@ -258,7 +258,7 @@ class _TabBarExampleState extends State<shedule_screen> with SingleTickerProvide
               children: const [
                 shedule_tab1(status: "Pending"), // Pass "Upcoming" status
                 shedule_tab1(status: "Completed"), // Pass "Completed" status
-                shedule_tab1(status: "Cancelled"),
+                shedule_tab1(status: "Canceled"),
 
               ],
             ),
