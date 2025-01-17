@@ -1,11 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:medical/Screens/Views/HomeDoctor.dart';
+import 'package:medical/global.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 
-import 'Homepage.dart';
 
 class DoctorAppointments extends StatefulWidget {
   @override
@@ -27,48 +27,45 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
     super.dispose();
   }
 
-  // Function to cancel an appointment
-  Future<void> _cancelAppointment(DocumentSnapshot appointment) async {
+  // Function to fetch appointments from the API
+  Future<List<dynamic>> _fetchAppointments() async {
     try {
-      await FirebaseFirestore.instance.collection('appointments').doc(appointment.id).update({
-        'status': 'Cancelled',
-      });
-      print('Appointment cancelled successfully');
-    } catch (e) {
-      print('Failed to cancel appointment: $e');
-    }
-  }
+      // Get the current user's email
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception("No user is currently logged in.");
+      }
+      String docEmail = currentUser.email ?? "";
 
-  // Function to accept an appointment
-  Future<void> _acceptAppointment(DocumentSnapshot appointment) async {
-    try {
-      await FirebaseFirestore.instance.collection('appointments').doc(appointment.id).update({
-        'status': 'Accepted',
-      });
-      print('Appointment accepted successfully');
+      // Make the API request
+      final response = await http.get(
+        Uri.parse(backend+'/api/consultation/consultations/doctor/$docEmail'),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load appointments');
+      }
     } catch (e) {
-      print('Failed to accept appointment: $e');
+      print('Error fetching appointments: $e');
+      return [];
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.lightBlueAccent),
           onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => HomeDoctor()), // Navigate to Homepage
-            );
+            Navigator.pop(context);
           },
         ),
         title: Text(
-          "Your Appointements Demands",
+          "Your Appointments",
           style: GoogleFonts.poppins(color: Colors.black, fontSize: 18.sp),
         ),
         centerTitle: false,
@@ -108,9 +105,9 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
             child: TabBarView(
               controller: tabController,
               children: [
-                _buildAppointmentsList(userEmail, 'Pending'),
-                _buildAppointmentsList(userEmail, 'Completed'),
-                _buildAppointmentsList(userEmail, 'Cancelled'),
+                _buildAppointmentsList('PENDING'),
+                _buildAppointmentsList('COMPLETED'),
+                _buildAppointmentsList('CANCELLED'),
               ],
             ),
           ),
@@ -119,14 +116,9 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
     );
   }
 
-  // Function to build the appointment list for a specific status
-  Widget _buildAppointmentsList(String userEmail, String status) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('appointments')
-          .where('email', isEqualTo: userEmail)  // Query by user email
-          .where('status', isEqualTo: status)  // Filter by status
-          .snapshots(),
+  Widget _buildAppointmentsList(String status) {
+    return FutureBuilder<List<dynamic>>(
+      future: _fetchAppointments(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -136,7 +128,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
           return Center(child: Text("Error: ${snapshot.error}"));
         }
 
-        var appointments = snapshot.data?.docs ?? [];
+        var appointments = snapshot.data ?? [];
 
         return appointments.isEmpty
             ? Center(
@@ -163,11 +155,11 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Doctor: ${appointment['doctor']}",
+                      "Patient: ${appointment['patientService']['name']}",
                       style: GoogleFonts.poppins(fontSize: 16.sp),
                     ),
                     Text(
-                      "Speciality: ${appointment['speciality']}",
+                      "Email: ${appointment['patientService']['email']}",
                       style: GoogleFonts.poppins(fontSize: 14.sp),
                     ),
                     Text(
@@ -179,31 +171,10 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
                       style: GoogleFonts.poppins(fontSize: 14.sp),
                     ),
                     Text(
-                      "Status: ${appointment['status']}",
+                      "Status: ${appointment['etatConsultation']}",
                       style: GoogleFonts.poppins(fontSize: 14.sp, color: Colors.grey),
                     ),
                     const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        if (appointment['status'] == 'Pending')
-                          ElevatedButton(
-                            onPressed: () => _acceptAppointment(appointment),
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.green,
-                            ),
-                            child: const Text('Accept'),
-                          ),
-                        const SizedBox(width: 10),
-                        if (appointment['status'] == 'Pending')
-                          ElevatedButton(
-                            onPressed: () => _cancelAppointment(appointment),
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                            ),
-                            child: const Text('Cancel'),
-                          ),
-                      ],
-                    ),
                   ],
                 ),
               ),
