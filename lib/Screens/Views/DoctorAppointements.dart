@@ -30,7 +30,6 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
     super.dispose();
   }
 
-  // Function to fetch appointments from the API
 
   Future<List<dynamic>> _fetchAppointments() async {
     try {
@@ -125,4 +124,3 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
 
   }
 
-}

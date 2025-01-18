@@ -39,13 +39,12 @@ class _FindDoctorState extends State<FindDoctor> {
         setState(() {
           doctors = data.map((item) {
             return {
-              "name": item["name"],                      // Map 'name' from API response
-              "category": item["specialiteDocteur"],      // Map 'specialiteDocteur' to 'category'
-              "distance": "3.0",                          // Hardcode distance for now
-              "image": "lib/icons/male-doctor.png", // Hardcode image URL
+              "name": item["name"],
+              "category": item["specialiteDocteur"],
+              "distance": "3.0",
+              "image": "lib/icons/male-doctor.png",
               "rating": "4.5",
               "email": item["email"],
-              // Hardcode rating
             };
           }).toList();
           isLoading = false;
