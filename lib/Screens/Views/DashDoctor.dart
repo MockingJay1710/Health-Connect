@@ -2,28 +2,155 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
-import 'ProfilMedical.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class Dashdoctor extends StatelessWidget {
+import '../../global.dart';
+import 'ProfilMedical.dart';
+
+class Dashdoctor extends StatefulWidget {
   const Dashdoctor({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    String? userEmail = FirebaseAuth.instance.currentUser?.email;
+  _DashdoctorState createState() => _DashdoctorState();
+}
 
+class _DashdoctorState extends State<Dashdoctor> {
+  String? doctorName;
+  List<dynamic> allAppointments = [];
+  List<dynamic> filteredAppointments = [];
+  DateTime selectedDate = DateTime.now();
+  int numberOfPatients = 0;
+  int pendingAppointments = 0;
+  int completedAppointments = 0;
+  List<DateTime> appointmentDates = [];
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    fetchDoctorName();
+    fetchAllAppointments();
+    fetchAppointmentsByStatus('Pending');
+    fetchAppointmentsByStatus('Completed');
+  }
+
+  Future<void> fetchDoctorName() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      String? email = currentUser?.email;
+
+      if (email != null) {
+        var userQuerySnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .get();
+
+        setState(() {
+          var userdata = userQuerySnapshot.docs.first.data();
+          doctorName = userdata?['name'] ?? "Doctor";
+        });
+      }
+    } catch (e) {
+      print("Error fetching doctor name: $e");
+    }
+  }
+
+  Future<void> fetchAllAppointments() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      String? docEmail = currentUser?.email;
+
+      if (docEmail == null) return;
+
+      final response = await http.get(Uri.parse(
+          '$backend/api/consultation/consultations/doctor/$docEmail'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          allAppointments = json.decode(response.body);
+          appointmentDates = allAppointments
+              .map<DateTime>((appointment) =>
+              DateTime.parse(appointment['date']))
+              .toList();
+          filterAppointmentsByDate(selectedDate);
+        });
+      } else {
+        print("Failed to fetch appointments: ${response.body}");
+      }
+    } catch (e) {
+      print("Error fetching appointments: $e");
+    }
+  }
+
+  Future<void> fetchAppointmentsByStatus(String status) async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      String? userEmail = currentUser?.email;
+
+      if (userEmail == null) return;
+
+      final response = await http.get(
+        Uri.parse(
+            '$backend/api/consultation/consultations/doctor/$userEmail/$status'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          if (status == 'Pending') {
+            // Filter today's pending appointments
+            pendingAppointments = json.decode(response.body).where((appointment) {
+              DateTime appointmentDate = DateTime.parse(appointment['date']);
+              return appointmentDate.year == DateTime.now().year &&
+                  appointmentDate.month == DateTime.now().month &&
+                  appointmentDate.day == DateTime.now().day;
+            }).toList().length;
+          } else if (status == 'Completed') {
+            completedAppointments = json.decode(response.body).length;
+          }
+        });
+      } else {
+        print("Failed to fetch appointments by status: ${response.body}");
+      }
+    } catch (e) {
+      print("Error fetching appointments by status: $e");
+    }
+  }
+
+  void filterAppointmentsByDate(DateTime date) {
+    setState(() {
+      filteredAppointments = allAppointments
+          .where((appointment) {
+        var appointmentDate = DateTime.parse(appointment['date']);
+        return appointmentDate.year == date.year &&
+            appointmentDate.month == date.month &&
+            appointmentDate.day == date.day;
+      })
+          .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
         elevation: 0,
-        title: Row(
-          children: [
-            // Doctor's profile details
-            // ...
-          ],
+        title: Text(
+          "Hi, Dr. ${doctorName ?? 'Loading...'}",
+          style: GoogleFonts.inter(
+            fontSize: 22.sp,
+            fontWeight: FontWeight.bold,
+            color: Colors.lightBlue,
+          ),
         ),
+        centerTitle: true,
       ),
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -31,114 +158,128 @@ class Dashdoctor extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
+              _buildProfileCard(),  // Updated Profile Card
+              const SizedBox(height: 20),
+              _buildStatsRow(),
+              const SizedBox(height: 20),
+              _buildNotificationsSection(),
+              const SizedBox(height: 20),
+              _buildCalendar(),
+              const SizedBox(height: 20),
+              _buildAppointmentsList(),
+              const SizedBox(height: 20),
+              _buildPatientsSection(),  // Section for Patients
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  Widget _buildProfileCard() {
+    return Card(
+      elevation: 5,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundImage: AssetImage('images/doctor1.png'), // Replace with a real image
+            ),
+            const SizedBox(width: 15),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Dr. ${doctorName ?? 'Loading...'}",
+                  style: GoogleFonts.inter(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  "Specialist in Cardiology", // Replace with dynamic specialization
+                  style: GoogleFonts.inter(
+                    fontSize: 14.sp,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildStatsCard(
+          icon: Icons.person,
+          title: "Patients",
+          value: numberOfPatients.toString(),
+          onTap: () {
+            // Navigate to patients screen
+          },
+        ),
+        _buildStatsCard(
+          icon: Icons.pending,
+          title: "Pending",
+          value: pendingAppointments.toString(),
+          onTap: () {
+            // Navigate to pending appointments screen
+          },
+        ),
+        _buildStatsCard(
+          icon: Icons.check_circle,
+          title: "Completed",
+          value: completedAppointments.toString(),
+          onTap: () {
+            // Navigate to completed appointments screen
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatsCard(
+      {required IconData icon,
+        required String title,
+        required String value,
+        required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        elevation: 5,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        color: Colors.lightBlue.withOpacity(0.1),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+          child: Column(
+            children: [
+              Icon(icon, size: 24.sp, color: Colors.lightBlue),
+              const SizedBox(height: 5),
               Text(
-                "Your Patients",
+                title,
                 style: GoogleFonts.inter(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w700,
-                  color: const Color.fromARGB(255, 46, 46, 46),
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black.withOpacity(0.7),
                 ),
               ),
-              const SizedBox(height: 10),
-              StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .where('role', isEqualTo: 'Patient')
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(child: Text("Error: ${snapshot.error}"));
-                  }
-
-                  var patients = snapshot.data?.docs ?? [];
-
-                  return patients.isEmpty
-                      ? Center(
-                    child: Text(
-                      "No patients found.",
-                      style: GoogleFonts.poppins(fontSize: 16.sp, color: Colors.grey),
-                    ),
-                  )
-                      : ListView.builder(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: patients.length,
-                    itemBuilder: (context, index) {
-                      var patient = patients[index];
-                      String profileImageBase64 = patient['profileImageBase64'];
-                      String profileImage = profileImageBase64.isEmpty
-                          ? 'lib/icons/avatar.png'
-                          : profileImageBase64;
-
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 10),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(10),
-                          leading: CircleAvatar(
-                            backgroundImage: AssetImage(profileImage),
-                            radius: 25,
-                          ),
-                          title: Text(
-                            patient['name'] ?? "Patient ${index + 1}",
-                            style: GoogleFonts.inter(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Birthdate: ${patient['dateNaissance']}",
-                                style: GoogleFonts.inter(
-                                  fontSize: 14.sp,
-                                  color: const Color.fromARGB(255, 117, 117, 117),
-                                ),
-                              ),
-                              Text(
-                                "Email: ${patient['email']}",
-                                style: GoogleFonts.inter(
-                                  fontSize: 14.sp,
-                                  color: const Color.fromARGB(255, 117, 117, 117),
-                                ),
-                              ),
-                            ],
-                          ),
-                          onTap: () {
-                            // Navigate to the ProfilMedical page with the patient's email
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ProfilMedical(
-                                  patientEmail: patient['email'],
-                                ),
-                              ),
-                            );
-                          },
-                          trailing: PopupMenuButton<String>(
-                            onSelected: (value) {
-                              // Action for menu items
-                            },
-                            itemBuilder: (BuildContext context) {
-                              return {'View Details', 'Edit', 'Remove'}
-                                  .map((String choice) {
-                                return PopupMenuItem<String>(
-                                  value: choice,
-                                  child: Text(choice),
-                                );
-                              }).toList();
-                            },
-                            child: const Icon(Icons.more_vert),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+              const SizedBox(height: 5),
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.lightBlue,
+                ),
               ),
             ],
           ),
@@ -146,4 +287,241 @@ class Dashdoctor extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildNotificationsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Notifications",
+          style: GoogleFonts.inter(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w700,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Card(
+          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: Padding(
+            padding: const EdgeInsets.all(15),
+            child: Text(
+              "You have $pendingAppointments new appointment requests today.",
+              style: GoogleFonts.inter(
+                fontSize: 14.sp,
+                color: Colors.black.withOpacity(0.7),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCalendar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.lightBlue.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Select a Day",
+            style: GoogleFonts.inter(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(7, (index) {
+              final day = selectedDate.add(Duration(days: index - selectedDate.weekday + 1));
+              final isSelected = day.year == selectedDate.year &&
+                  day.month == selectedDate.month &&
+                  day.day == selectedDate.day;
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedDate = day;
+                  });
+                  filterAppointmentsByDate(day);
+                },
+                child: Container(
+                  width: 40, // Width for each day widget
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.lightBlue : Colors.transparent,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        DateFormat('EEE').format(day), // Weekday abbreviation
+                        style: GoogleFonts.inter(
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        day.day.toString(), // Day number
+                        style: GoogleFonts.inter(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppointmentsList() {
+    return filteredAppointments.isEmpty
+        ? Center(
+      child: Text(
+        "No appointments for ${DateFormat('yyyy-MM-dd').format(selectedDate)}",
+        style: GoogleFonts.poppins(fontSize: 16.sp, color: Colors.grey),
+      ),
+    )
+        : Column(
+      children: filteredAppointments.map((appointment) {
+        return Card(
+          elevation: 5,
+          margin: const EdgeInsets.symmetric(vertical: 10),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10)),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.lightBlue,
+              child: Icon(Icons.person, color: Colors.white),
+            ),
+            title: Text(
+              appointment['patientName'] ?? "Patient",
+              style: GoogleFonts.inter(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              "Time: ${appointment['time']}\nStatus: ${appointment['etatConsultation']}",
+              style: GoogleFonts.inter(
+                fontSize: 14.sp,
+                color: Colors.grey,
+              ),
+            ),
+            trailing: IconButton(
+              icon: Icon(Icons.arrow_forward, color: Colors.lightBlue),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfilMedical(
+                      patientEmail: appointment['patientEmail'],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+Widget _buildPatientCard(Map<String, dynamic> patient) {
+  return Card(
+    elevation: 5,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+    child: Padding(
+      padding: const EdgeInsets.all(15),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: Colors.greenAccent,
+            child: Icon(Icons.person, color: Colors.white),
+          ),
+          const SizedBox(width: 15),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                patient['name'],
+                style: GoogleFonts.inter(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                "Age: ${patient['age']}",
+                style: GoogleFonts.inter(
+                  fontSize: 14.sp,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                "Condition: ${patient['condition']}",
+                style: GoogleFonts.inter(
+                  fontSize: 14.sp,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildPatientsSection() {
+   List<dynamic> patients = [
+    {'name': 'John Doe', 'age': 45, 'condition': 'Hypertension'},
+    {'name': 'Jane Smith', 'age': 30, 'condition': 'Asthma'},
+    {'name': 'Alice Brown', 'age': 60, 'condition': 'Diabetes'},
+    {'name': 'Bob White', 'age': 50, 'condition': 'Cardiac Issues'},
+  ];
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        "Your Patients",
+        style: GoogleFonts.inter(
+          fontSize: 18.sp,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        height: 1,
+        color: Colors.grey[300], // Separation line
+      ),
+      const SizedBox(height: 10),
+      Column(
+        children:patients=patients.map((patient) {
+          return _buildPatientCard(patient);
+        }).toList(),
+      ),
+    ],
+  );
 }
