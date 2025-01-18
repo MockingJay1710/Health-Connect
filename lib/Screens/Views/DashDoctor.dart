@@ -11,14 +11,17 @@ import '../../global.dart';
 import 'ProfilMedical.dart';
 
 class Dashdoctor extends StatefulWidget {
+
   const Dashdoctor({super.key});
 
   @override
   _DashdoctorState createState() => _DashdoctorState();
 }
 
-class _DashdoctorState extends State<Dashdoctor> {
-  String? doctorName;
+class _DashdoctorState extends State<Dashdoctor>
+{  List<dynamic> patients = [];bool isLoadingPatients = true;
+
+String? doctorName;
   List<dynamic> allAppointments = [];
   List<dynamic> filteredAppointments = [];
   DateTime selectedDate = DateTime.now();
@@ -36,7 +39,64 @@ class _DashdoctorState extends State<Dashdoctor> {
     fetchAllAppointments();
     fetchAppointmentsByStatus('Pending');
     fetchAppointmentsByStatus('Completed');
+    fetchPatients();
+
   }
+
+Widget _buildPatientsSection() {
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        "Your Patients",
+        style: GoogleFonts.inter(
+          fontSize: 18.sp,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+      ),
+      const SizedBox(height: 10),
+      Container(
+        height: 1,
+        color: Colors.grey[300], // Separation line
+      ),
+      const SizedBox(height: 10),
+      isLoadingPatients
+          ? Center(child: CircularProgressIndicator())
+          : Column(
+        children: patients.map((patient) {
+          return _buildPatientCard(patient);
+        }).toList(),
+      ),
+    ],
+  );
+}
+
+
+
+Future<void> fetchPatients() async {
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      String? userEmail = currentUser?.email;
+
+      if (userEmail == null) return;
+
+      final response = await http.get(Uri.parse('$backend/api/doctors/$userEmail/patients'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          patients = json.decode(response.body);
+          isLoadingPatients = false; // Set loading to false after fetching
+        });
+      } else {
+        print("Failed to fetch patients: ${response.body}");
+      }
+    } catch (e) {
+      print("Error fetching patients: $e");
+    }
+  }
+
 
   Future<void> fetchDoctorName() async {
     try {
@@ -132,6 +192,7 @@ class _DashdoctorState extends State<Dashdoctor> {
           .toList();
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -462,7 +523,7 @@ Widget _buildPatientCard(Map<String, dynamic> patient) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                patient['name'],
+                patient['name'] ?? 'No name available',
                 style: GoogleFonts.inter(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -471,7 +532,7 @@ Widget _buildPatientCard(Map<String, dynamic> patient) {
               ),
               const SizedBox(height: 5),
               Text(
-                "Age: ${patient['age']}",
+                "Date of Birth: ${patient['dateNaissance'] ?? 'Unknown'}",
                 style: GoogleFonts.inter(
                   fontSize: 14.sp,
                   color: Colors.grey,
@@ -479,7 +540,7 @@ Widget _buildPatientCard(Map<String, dynamic> patient) {
               ),
               const SizedBox(height: 5),
               Text(
-                "Condition: ${patient['condition']}",
+                "Phone: ${patient['phone_number'] ?? 'Unknown'}",
                 style: GoogleFonts.inter(
                   fontSize: 14.sp,
                   color: Colors.grey,
@@ -490,38 +551,5 @@ Widget _buildPatientCard(Map<String, dynamic> patient) {
         ],
       ),
     ),
-  );
-}
-
-Widget _buildPatientsSection() {
-   List<dynamic> patients = [
-    {'name': 'John Doe', 'age': 45, 'condition': 'Hypertension'},
-    {'name': 'Jane Smith', 'age': 30, 'condition': 'Asthma'},
-    {'name': 'Alice Brown', 'age': 60, 'condition': 'Diabetes'},
-    {'name': 'Bob White', 'age': 50, 'condition': 'Cardiac Issues'},
-  ];
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        "Your Patients",
-        style: GoogleFonts.inter(
-          fontSize: 18.sp,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-        ),
-      ),
-      const SizedBox(height: 10),
-      Container(
-        height: 1,
-        color: Colors.grey[300], // Separation line
-      ),
-      const SizedBox(height: 10),
-      Column(
-        children:patients=patients.map((patient) {
-          return _buildPatientCard(patient);
-        }).toList(),
-      ),
-    ],
   );
 }
