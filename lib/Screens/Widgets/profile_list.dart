@@ -6,56 +6,74 @@ class profile_list extends StatelessWidget {
   final String title;
   final String image;
   final Color color;
+  final VoidCallback? onTap;
 
-  profile_list({required this.image, required this.title, required this.color});
+  const profile_list({
+    Key? key,
+    required this.title,
+    required this.image,
+    required this.color,
+    this.onTap,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            height: MediaQuery.of(context).size.height * 0.06,
-            width: MediaQuery.of(context).size.width * 0.9,
-            child: Row(children: [
-              Container(
-                height: MediaQuery.of(context).size.height * 0.06,
-                width: MediaQuery.of(context).size.width * 0.1500,
-                decoration: const BoxDecoration(
-                  color: Color.fromARGB(255, 247, 250, 247),
-                  shape: BoxShape.circle,
-                ),
-                child: Image.asset(image),
-              ),
-              const SizedBox(
-                width: 5,
-              ),
-              Container(
-                height: MediaQuery.of(context).size.height * 0.06,
-                width: MediaQuery.of(context).size.width * 0.5800,
-                child: Row(children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: 6.h,
+              width: 90.w,
+              child: Row(
+                children: [
+                  // Icon/Image Section
+                  Container(
+                    height: 6.h,
+                    width: 15.w,
+                    decoration: const BoxDecoration(
+                      color: Color.fromARGB(255, 247, 250, 247),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        image,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Title Section
+                  Expanded(
                     child: Text(
                       title,
                       style: GoogleFonts.inter(
-                          fontSize: 17.sp,
-                          fontWeight: FontWeight.w600,
-                          color: color),
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ]),
+                  // Forward Icon
+                  Container(
+                    height: 6.h,
+                    width: 10.w,
+                    child: Image.asset(
+                      "lib/icons/forward.png",
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                  height: MediaQuery.of(context).size.height * 0.06,
-                  width: MediaQuery.of(context).size.width * 0.1100,
-                  decoration: const BoxDecoration(),
-                  child: Image.asset("lib/icons/forward.png")),
-            ]),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

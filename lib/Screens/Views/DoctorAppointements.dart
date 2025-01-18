@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
 import 'package:medical/Screens/Views/Doctor_schedule.dart';
-
 import 'package:medical/global.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'dart:convert';
@@ -120,9 +118,4 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
       ),
     );
   }
-
-
-
-  }
-
 }
