@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../../global.dart';
+import 'DoctorAppointements.dart';
 import 'ProfilMedical.dart';
 
 class Dashdoctor extends StatefulWidget {
@@ -87,7 +88,7 @@ Future<void> fetchPatients() async {
       if (response.statusCode == 200) {
         setState(() {
           patients = json.decode(response.body);
-          isLoadingPatients = false; // Set loading to false after fetching
+          isLoadingPatients = false;
         });
       } else {
         print("Failed to fetch patients: ${response.body}");
@@ -491,9 +492,8 @@ Future<void> fetchPatients() async {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProfilMedical(
-                      patientEmail: appointment['patientEmail'],
-                    ),
+                    builder: (context) =>
+                        DoctorAppointments(),
                   ),
                 );
               },

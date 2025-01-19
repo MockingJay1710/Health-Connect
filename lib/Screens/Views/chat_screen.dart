@@ -1,18 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:responsive_sizer/responsive_sizer.dart';
-
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../../global.dart';
 
 class chat_screen extends StatefulWidget {
   final String image;
   final String name;
-  final String receiverEmail;  // Add receiver email
+  final String receiverEmail;
 
   chat_screen({
     required this.image,
     required this.name,
-    required this.receiverEmail,  // Pass receiver's email
+    required this.receiverEmail,
   });
 
   @override
@@ -21,41 +21,107 @@ class chat_screen extends StatefulWidget {
 
 class _chat_screenState extends State<chat_screen> {
   final TextEditingController messageController = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final User? currentUser = FirebaseAuth.instance.currentUser;
-
-  late String chatId;
+  List<dynamic> messages = [];
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    chatId = generateChatId();
+    initializeConversation();
+    fetchMessages();// Initialize conversation on view load
   }
 
-  // Generate a unique chat ID based on user email and doctor name
-  String generateChatId() {
-    return currentUser!.email!.replaceAll('.', '_') + "_" + widget.receiverEmail.replaceAll(' ', '_');
+  Future<void> initializeConversation() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    var senderEmail = currentUser?.email;
+
+    final conversation = {
+      "id": {
+        "senderEmail": senderEmail,
+        "receiverEmail": widget.receiverEmail,
+      },
+      "messages": []
+    };
+
+    final url = '$backend/api/conversations/save';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(conversation),
+      );
+
+      if (response.statusCode == 200) {
+        print("Conversation initialized successfully");
+      } else {
+        print("Failed to initialize conversation: ${response.body}");
+      }
+    } catch (e) {
+      print("Error initializing conversation: $e");
+    }
   }
 
-  // Send message to Firestore
+  Future<void> fetchMessages() async {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    var senderEmail = currentUser?.email;
+    final url = '$backend/api/conversations/${widget.receiverEmail}/$senderEmail/messages';
+
+    try {
+      setState(() {
+        isLoading = true;
+      });
+
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        setState(() {
+          messages = jsonDecode(response.body);
+          isLoading = false;
+        });
+      } else {
+        print("Failed to fetch messages: ${response.body}");
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching messages: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   Future<void> sendMessage() async {
     if (messageController.text.isNotEmpty) {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      var senderEmail = currentUser?.email;
+
       final message = {
-        "sender": currentUser?.email ?? "Unknown",
-        "receiver": widget.receiverEmail,  // Include the receiver's email
-        "message": messageController.text,
-        "timestamp": FieldValue.serverTimestamp(),
+        "content": messageController.text,
+        "senderMail": senderEmail,
+        "recipientMail": widget.receiverEmail,
       };
 
-      // Add the message to Firestore
-      await _firestore
-          .collection('chats')
-          .doc(chatId)
-          .collection('messages')
-          .add(message);
+      final url =
+          '$backend/api/conversations/${widget.receiverEmail}/$senderEmail/addMessage';
 
-      // Clear the input field
-      messageController.clear();
+      try {
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(message),
+        );
+
+        if (response.statusCode == 200) {
+          messageController.clear();
+          await fetchMessages(); // Fetch messages after adding a new one
+        } else {
+          print("Failed to send message: ${response.body}");
+        }
+      } catch (e) {
+        print("Error sending message: $e");
+      }
     }
   }
 
@@ -65,14 +131,11 @@ class _chat_screenState extends State<chat_screen> {
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(widget.name),
         centerTitle: true,
         elevation: 0,
-        toolbarHeight: 100,
         backgroundColor: Colors.white,
         actions: [
           Padding(
@@ -85,60 +148,44 @@ class _chat_screenState extends State<chat_screen> {
       ),
       body: Column(
         children: [
-          // Display messages from Firestore
           Expanded(
-            child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _firestore
-                  .collection('chats')
-                  .doc(chatId)
-                  .collection('messages')
-                  .orderBy('timestamp', descending: false) // Order messages by timestamp
-                  .snapshots(), // Real-time updates
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
+            child: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : messages.isEmpty
+                ? Center(child: Text("No messages yet."))
+                : ListView.builder(
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final message = messages[index];
+                final isUser = message['senderMail'] ==
+                    FirebaseAuth.instance.currentUser?.email;
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text("No messages yet."));
-                }
-
-                final messages = snapshot.data!.docs;
-
-                return ListView.builder(
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index].data();
-                    final isUser = message['sender'] == currentUser?.email;
-
-                    return ListTile(
-                      title: Align(
-                        alignment: isUser
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
-                        child: Container(
-                          padding: EdgeInsets.all(10),
-                          margin: EdgeInsets.symmetric(vertical: 5),
-                          decoration: BoxDecoration(
-                            color: isUser ? Colors.blueAccent : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: Text(
-                            message['message'] ?? '',
-                            style: TextStyle(
-                              color: isUser ? Colors.white : Colors.black,
-                            ),
-                          ),
+                return ListTile(
+                  title: Align(
+                    alignment: isUser
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      padding: EdgeInsets.all(10),
+                      margin: EdgeInsets.symmetric(vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isUser
+                            ? Colors.blueAccent
+                            : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Text(
+                        message['content'] ?? '',
+                        style: TextStyle(
+                          color: isUser ? Colors.white : Colors.black,
                         ),
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 );
               },
             ),
           ),
-
-          // Input field for new messages
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(

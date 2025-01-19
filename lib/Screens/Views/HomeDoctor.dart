@@ -2,6 +2,7 @@ import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.da
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:medical/Screens/Login-Signup/Profile_screen.dart';
+import 'package:medical/Screens/Login-Signup/profilDoctor.dart';
 import 'package:medical/Screens/Login-Signup/shedule_screen.dart';
 import 'package:medical/Screens/Views/Dashboard_screen.dart';
 import 'package:medical/Screens/Widgets/TabbarPages/message_tab_all.dart';
@@ -29,7 +30,7 @@ class _HomepageState extends State<HomeDoctor> {
     Dashdoctor(),
     message_tab_all(),
     DoctorAppointments(),
-    Profile_screen()
+    ProfileDoctor()
   ];
 
   @override

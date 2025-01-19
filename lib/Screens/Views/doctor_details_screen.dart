@@ -258,7 +258,7 @@ import 'package:medical/global.dart';
                             child: chat_screen(
                               image: image,
                               name: doctorName,
-                              receiverEmail: '', // Adjust as necessary
+                              receiverEmail: docEmail, // Adjust as necessary
                             ),
                           ),
                         );

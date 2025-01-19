@@ -187,7 +187,6 @@ class _RegisterState extends State<register> {
               const SnackBar(content: Text('User is already registered.')),
             );
           } else {
-            // Handle other errors
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Failed to register user: ${response.body}')),
             );

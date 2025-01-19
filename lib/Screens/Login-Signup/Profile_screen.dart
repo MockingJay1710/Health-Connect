@@ -55,7 +55,6 @@ class Profile_screen extends StatelessWidget {
           String email = userData['email'] ?? '';
           String phoneNumber = userData['phoneNumber'] ?? '';
           String profileImageBase64 = userData['profileImageBase64'] ?? '';
-          String role = userData['role'] ?? 'Patient';
           String dateNaissance = userData['dateNaissance'] ?? 'Unknown';
 
           // Use default avatar if no profile image is available
