@@ -4,14 +4,14 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 
 class profile_list extends StatelessWidget {
   final String title;
-  final String image;
+  final IconData icon;
   final Color color;
   final VoidCallback? onTap;
 
   const profile_list({
     Key? key,
     required this.title,
-    required this.image,
+    required this.icon,
     required this.color,
     this.onTap,
   }) : super(key: key);
@@ -30,20 +30,18 @@ class profile_list extends StatelessWidget {
               width: 90.w,
               child: Row(
                 children: [
-                  // Icon/Image Section
+                  // Icon Section
                   Container(
                     height: 6.h,
                     width: 15.w,
-                    decoration: const BoxDecoration(
-                      color: Color.fromARGB(255, 247, 250, 247),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
                       shape: BoxShape.circle,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.asset(
-                        image,
-                        fit: BoxFit.contain,
-                      ),
+                    child: Icon(
+                      icon,
+                      color: color,
+                      size: 24.sp,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -61,13 +59,10 @@ class profile_list extends StatelessWidget {
                     ),
                   ),
                   // Forward Icon
-                  Container(
-                    height: 6.h,
-                    width: 10.w,
-                    child: Image.asset(
-                      "lib/icons/forward.png",
-                      fit: BoxFit.contain,
-                    ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: color,
+                    size: 18.sp,
                   ),
                 ],
               ),

@@ -10,7 +10,6 @@ import 'package:medical/Screens/Views/ProfilMedical.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 
 class Profile_screen extends StatelessWidget {
-
   const Profile_screen({super.key});
 
   Future<Map<String, dynamic>> getUserData() async {
@@ -35,7 +34,7 @@ class Profile_screen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 3, 226, 215),
+      backgroundColor: const Color(0xFF6A1B9A), // Purple background
       body: FutureBuilder<Map<String, dynamic>>(
         future: getUserData(),
         builder: (context, snapshot) {
@@ -103,11 +102,9 @@ class Profile_screen extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(width: 1, color: Colors.white),
-                            color: Colors.white,
-                            image: const DecorationImage(
-                              image: AssetImage("lib/icons/camra.png"),
-                            ),
+                            color: const Color(0xFFAB47BC), // Light purple
                           ),
+                          child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
                         ),
                       ),
                     ],
@@ -117,26 +114,25 @@ class Profile_screen extends StatelessWidget {
                 Text(
                   name,
                   style: GoogleFonts.poppins(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 Text(
                   "Email: $email",
-                  style: GoogleFonts.poppins(fontSize: 14.sp, color: Colors.white),
+                  style: GoogleFonts.poppins(fontSize: 16.sp, color: Colors.white),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   "Phone: $phoneNumber",
-                  style: GoogleFonts.poppins(fontSize: 14.sp, color: Colors.white),
+                  style: GoogleFonts.poppins(fontSize: 16.sp, color: Colors.white),
                 ),
-
                 const SizedBox(height: 10),
                 Text(
                   "Date of Birth: $dateNaissance",
-                  style: GoogleFonts.poppins(fontSize: 14.sp, color: Colors.white),
+                  style: GoogleFonts.poppins(fontSize: 16.sp, color: Colors.white),
                 ),
                 const SizedBox(height: 30),
                 // Profile Links Section
@@ -152,11 +148,11 @@ class Profile_screen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      const SizedBox(height: 50),
+                      const SizedBox(height: 30),
                       profile_list(
-                        image: "lib/icons/pngegg.png",
+                        icon: Icons.person_outline,
                         title: "My Medical Profile",
-                        color: Colors.black87,
+                        color: const Color(0xFF6A1B9A),
                         onTap: () {
                           Navigator.push(
                             context,
@@ -167,22 +163,22 @@ class Profile_screen extends StatelessWidget {
                         },
                       ),
                       const Divider(),
-                      const profile_list(
-                        image: "lib/icons/heart2.png",
+                      profile_list(
+                        icon: Icons.favorite_border,
                         title: "My Saved",
-                        color: Colors.black87,
+                        color: const Color(0xFF6A1B9A),
                       ),
                       const Divider(),
-                      const profile_list(
-                        image: "lib/icons/appoint.png",
+                      profile_list(
+                        icon: Icons.calendar_today,
                         title: "Appointments",
-                        color: Colors.black87,
+                        color: const Color(0xFF6A1B9A),
                       ),
                       const Divider(),
-                      const profile_list(
-                        image: "lib/icons/setting.png",
+                      profile_list(
+                        icon: Icons.settings_outlined,
                         title: "Settings",
-                        color: Colors.black87,
+                        color: const Color(0xFF6A1B9A),
                       ),
                     ],
                   ),

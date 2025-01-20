@@ -97,7 +97,7 @@ class _DoctorAppointmentsState extends State<DoctorAppointments> with SingleTick
                   controller: tabController,
                   tabs: const [
                     Tab(text: "Pending"),
-                    Tab(text: "Completed"),
+                    Tab(text: "Accepted"),
                     Tab(text: "Cancelled"),
                   ],
                 ),

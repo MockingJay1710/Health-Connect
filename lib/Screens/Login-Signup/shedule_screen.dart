@@ -245,7 +245,7 @@ class _TabBarExampleState extends State<shedule_screen> with SingleTickerProvide
                   controller: tabController,
                   tabs: const [
                     Tab(text: "Upcoming"),
-                    Tab(text: "Completed"),
+                    Tab(text: "Accepted"),
                     Tab(text: "Canceled"),
                   ],
                 ),

@@ -47,8 +47,8 @@ import 'package:medical/global.dart';
                   onTap: () async {
                     DateTime? pickedDate = await showDatePicker(
                       context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
+                      initialDate: DateTime.now().add(const Duration(days: 2)),
+                      firstDate: DateTime.now().add(const Duration(days: 2)),
                       lastDate: DateTime(2101),
                     );
                     if (pickedDate != null) {

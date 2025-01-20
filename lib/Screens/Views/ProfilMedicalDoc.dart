@@ -5,10 +5,10 @@ import 'dart:convert';
 
 import 'package:medical/global.dart';
 
-class ProfilMedical extends StatelessWidget {
+class ProfilMedicalDoc extends StatelessWidget {
   final String? patientEmail;
 
-  const ProfilMedical({Key? key, this.patientEmail}) : super(key: key);
+  const ProfilMedicalDoc({Key? key, this.patientEmail}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -641,7 +641,7 @@ class ProfilMedical extends StatelessWidget {
           List<Map<String, String>> results = data.map<Map<String, String>>((e) {
             return {
               'date': e['date'] ?? '',
-              'note': e['notesDoctor'] ?? '',
+              'notesDoctor': e['notesDoctor'] ?? '',
             };
           }).toList();
 
@@ -655,6 +655,98 @@ class ProfilMedical extends StatelessWidget {
           SnackBar(content: Text('Failed to load exam results: $error')),
         );
       }
+    }
+
+    // Add a new exam result to the backend
+    Future<void> addExamResult(String date, String notesDoctor) async {
+      try {
+        final response = await http.post(
+          Uri.parse('$backend/api/profil-medical/$patientEmail/AddResultatExamen'),
+          headers: {'Content-Type': 'application/json; charset=UTF-8'},
+          body: json.encode({'date': date, 'notesDoctor': notesDoctor}),
+        );
+
+        if (response.statusCode != 200) {
+          throw Exception('Failed to add exam result');
+        }
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add exam result: $error')),
+        );
+      }
+    }
+
+    // Function to display dialog for adding a new exam result
+    Future<void> showAddExamResultDialog() async {
+      final TextEditingController dateController = TextEditingController();
+      final TextEditingController noteController = TextEditingController();
+
+      DateTime selectedDate = DateTime.now();
+
+      Future<void> _selectDate() async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: selectedDate,
+          firstDate: DateTime(1900),
+          lastDate: DateTime(2100),
+        );
+        if (picked != null && picked != selectedDate) {
+          selectedDate = picked;
+          dateController.text = "${selectedDate.toLocal()}".split(' ')[0];
+        }
+      }
+
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Add Exam Result'),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: dateController,
+                  decoration: const InputDecoration(labelText: 'Date'),
+                  readOnly: true,
+                  onTap: _selectDate,
+                ),
+                TextField(
+                  controller: noteController,
+                  decoration: const InputDecoration(labelText: 'Note'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final date = dateController.text;
+                  final note = noteController.text;
+
+                  if (date.isNotEmpty && note.isNotEmpty) {
+                    addExamResult(date, note).then((_) {
+                      Navigator.of(context).pop();
+                    }).catchError((error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to add exam result: $error')),
+                      );
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please fill in all fields')),
+                    );
+                  }
+                },
+                child: const Text('Add'),
+              ),
+            ],
+          );
+        },
+      );
     }
 
     return StatefulBuilder(
@@ -689,10 +781,15 @@ class ProfilMedical extends StatelessWidget {
                   (result) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Text(
-                  '${result['date']}: ${result['note']}',
+                  '${result['date']}: ${result['notesDoctor']}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: showAddExamResultDialog,
+              child: const Text('Add Exam Result'),
             ),
           ],
         );
@@ -704,8 +801,5 @@ class ProfilMedical extends StatelessWidget {
 
 
 
-  void _showAddItemDialog(BuildContext context, String sectionTitle, List<String> dropdownOptions) {
-    // Show a dialog to add an item
-  }
 
 }

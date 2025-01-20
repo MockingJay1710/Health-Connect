@@ -260,6 +260,7 @@ class _RegisterState extends State<register> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
+
                     final emailRegex = RegExp(
                         r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
                     if (!emailRegex.hasMatch(value)) {
@@ -404,6 +405,9 @@ class _RegisterState extends State<register> {
                     }
                     if (_selectedRole == 'Doctor' && age < 25) {
                       return 'Doctors must be at least 25 years old';
+                    }
+                    if (_selectedRole == 'Patient' && age < 18) {
+                      return 'Patients must be at least 18 years old';
                     }
                     return null;
                   },
